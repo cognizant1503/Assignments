@@ -1,0 +1,14 @@
+declare
+    v_total_salary number;
+    v_salary employees.salary%type;
+    v_job_id employees.job_id%type:='MK_REP';
+    v_commission EMPLOYEES.COMMISSION_PCT%type:=0.1;
+    v_emp_id employees.employee_id%type:=202;
+begin
+    update employees set commission_pct=v_commission where employee_id=v_emp_id
+    and job_id=v_job_id;
+    select salary into v_salary from employees where employee_id=v_emp_id;
+    
+    v_total_salary:=v_salary*(1+v_commission);
+    DBMS_OUTPUT.PUT_LINE('Total Salary = ' || v_total_salary);
+end;

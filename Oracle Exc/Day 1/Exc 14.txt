@@ -1,0 +1,15 @@
+DECLARE
+   v_job_id      jobs.job_id%TYPE;
+   v_job_title   jobs.job_title%TYPE := 'Programmer';
+   v_no_of_emp   NUMBER (3) := 0;
+BEGIN
+
+   select job_id into v_job_id from jobs where job_title='Programmer'; 
+    if v_job_id is null then
+        dbms_output.put_line('Job not found');  
+    else
+        select count(employee_id) into v_no_of_emp
+          from employees where job_id=v_job_id;
+        dbms_output.put_line('Number of  employees = ' || v_no_of_emp);  
+    end if;
+end;

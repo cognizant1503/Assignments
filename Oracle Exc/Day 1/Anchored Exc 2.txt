@@ -1,0 +1,12 @@
+declare
+    v_first_name employees.first_name%type;
+    v_email employees.email%type;
+    v_phone employees.phone_number%type;
+begin
+    select first_name,email,phone_number 
+        into v_first_name,v_email,v_phone from employees where employee_id=100;
+    
+    dbms_output.put_line('First name : ' || v_first_name);
+    dbms_output.put_line('Email : ' || v_email);
+    dbms_output.put_line('Phone NUmber : ' || v_phone); 
+end;

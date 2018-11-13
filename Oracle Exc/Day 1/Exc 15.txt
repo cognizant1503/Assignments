@@ -1,0 +1,10 @@
+declare
+    v_year number;
+begin
+    select round((sysdate-hire_date)/365) into v_year from employees where employee_id=105;
+    if v_year>2 then
+        dbms_output.put_line('Eligible'||' = '||v_year);
+    else
+        dbms_output.put_line('Not Eligible');
+    end if;
+end;

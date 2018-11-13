@@ -1,0 +1,32 @@
+DECLARE
+  -- Declaring variables to store the retrieved values of Alexander
+  v_first_name         VARCHAR2(20);
+  v_last_name          VARCHAR2(25);
+  v_Date_of_Joining    DATE;
+  v_salary             NUMBER(8,2);
+  -- Variable to store the calculated salary
+  v_incremented_salary NUMBER(8,2);
+BEGIN
+  -- Query to fetch the values of Alexander from DB
+  SELECT first_name,last_name,hire_date,salary
+  INTO v_first_name,v_last_name,v_Date_of_Joining,v_salary
+  FROM employees WHERE employee_id = 103; --Alexander's employee ID is 103
+  
+  -- Checking if the hire date is before 01-Jan-95
+  IF(v_Date_of_Joining < '01-Jan-95') THEN
+    -- Calculating new salary with 10+5 % hike
+    v_incremented_salary := v_salary * 1.15;
+  ELSE
+    -- Calculating new salary with 10% hike 
+    v_incremented_salary := v_salary * 1.1;
+  END IF;
+  
+  -- Updating the salary of Alexander in the DB
+  UPDATE employees SET salary = v_incremented_salary WHERE employee_id = 103;
+  
+  --Displaying the report
+  DBMS_OUTPUT.put_line ('Name : ' || v_First_Name ||' '|| v_Last_Name);
+  DBMS_OUTPUT.put_line ('Date of Joining : ' || v_Date_of_Joining);
+  DBMS_OUTPUT.put_line ('Current Salary : ' || v_Salary);
+  DBMS_OUTPUT.put_line ('Incremented Salary : ' || v_incremented_salary);
+END;

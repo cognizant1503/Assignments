@@ -1,0 +1,22 @@
+DECLARE
+  v_job_ID VARCHAR2(10) := 'FI_CLERK';
+  v_job_title VARCHAR2 (35) := 'Finance Clerk';
+  v_min_salary NUMBER (6) := 5000;
+  v_max_salary NUMBER (6) := 10000;
+  v_count_of_jobs PLS_INTEGER;
+BEGIN
+  --Retrieving the number of jobs with same job_id
+  /*COUNT() is an aggregate funtion which will always return one row result,
+    so even if there are no matching records in the table it will return 0 
+    and will not lead to an exception */
+  SELECT COUNT (Job_id)
+  INTO v_count_of_jobs FROM jobs WHERE job_id = v_job_ID; 
+  
+  IF (v_count_of_jobs = 0)
+  THEN --if count is 0 indicate given job ID doesn't exist in jobs table
+  INSERT INTO Jobs
+    VALUES (v_job_ID,v_job_title,v_min_salary,v_max_salary);
+    ELSE --otherwise  it indicates given job ID already exist
+    DBMS_OUTPUT.PUT_LINE (v_job_title || ' already exists');
+    END IF;
+END;

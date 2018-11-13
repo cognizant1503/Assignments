@@ -1,0 +1,22 @@
+DECLARE
+  --used for tax calculation
+  p_employee_id  NUMBER(6):=100;
+  v_salary NUMBER(8,2) ;
+  v_tax_percentage NUMBER(2);
+  v_tax_amount NUMBER(8,2);
+BEGIN
+  --fetching salary of the given employee
+  SELECT salary INTO v_salary
+  FROM employees WHERE employee_id = p_employee_id;
+  --logic for tax percentage computation
+  IF v_salary >=15000 THEN
+    v_tax_percentage := 15;
+  ELSIF v_salary < 15000 AND v_salary >= 8000 THEN
+    v_tax_percentage := 10;
+  ELSE
+    v_tax_percentage := 0;
+  END IF;
+--formula for tax calculation
+v_tax_amount:=v_salary*v_tax_percentage*0.01;
+DBMS_OUTPUT.put_line('Employee has to pay tax of Rs.'||v_tax_amount);
+END;

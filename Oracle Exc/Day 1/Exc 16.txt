@@ -1,0 +1,14 @@
+declare
+    v_dept_id departments.department_id%type;
+    v_num number;
+    v_emp_id employees.employee_id%type:=105;
+begin
+    select department_id into v_dept_id from departments
+        where department_name='IT';
+    
+    select employee_id into v_num from employees where employee_id=v_emp_id and department_id=v_dept_id;
+    
+    if v_num=v_emp_id then
+      update departments set manager_id=v_emp_id where department_id=v_dept_id;
+    end if;
+end;

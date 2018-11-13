@@ -1,0 +1,19 @@
+DECLARE
+   v_region_name    regions.region_name%TYPE := 'Asia';
+   --get the region ID from regions table
+   v_region_id      regions.region_id%TYPE;
+   --change the values of folloeing variables to add other countries
+   v_country_name   countries.country_name%TYPE := 'Sri Lanka';
+   v_country_id     countries.country_id%TYPE := 'LK';
+   v_count pls_integer;
+BEGIN
+    select region_id into v_region_id from regions where region_name='Asia';
+    
+    select count(country_id) into v_count from countries where country_id=v_country_id;
+    
+    if v_count=0 then
+      insert into countries values(v_country_id,v_country_name,v_region_id);
+    else
+      dbms_output.put_line('Country Already Exists');
+    end if;
+end;

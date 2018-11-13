@@ -1,0 +1,13 @@
+DECLARE
+  --variable to store the retrieved salary
+  v_salary NUMBER(8,2);
+  v_eligible_salary CONSTANT NUMBER(6) := 8000;
+  v_employee_id NUMBER(3):=100;
+BEGIN
+  --salary of Steven, employee id 100 is retrieved
+  SELECT salary INTO v_salary FROM employees WHERE employee_id=v_employee_id;
+  --retrieved value is checked as per the rule
+  IF v_salary >v_eligible_salary THEN
+    DBMS_OUTPUT.put_line('Eligible to pay tax');
+  END IF;
+END;

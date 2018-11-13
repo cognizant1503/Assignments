@@ -1,0 +1,151 @@
+BEGIN
+      DBMS_OUTPUT.PUT_LINE('Welcome to PL/SQL');
+END;
+
+===================================================================
+DECLARE
+      v_num number(6,2); --v_num number(6,2):=400.55 
+      v_num2 number(10,3) DEFAULT 4502.23;
+BEGIN
+      DBMS_OUTPUT.PUT_LINE('Number value= '|| v_num);
+      v_num:=100;
+      DBMS_OUTPUT.PUT_LINE('Number value= '|| v_num);
+      DBMS_OUTPUT.PUT_LINE('Number2 value= '|| v_num2);
+END;
+
+===================================================================
+
+DECLARE
+      v_num number(6,2) NOT NULL:=458.85; --v_num number(6,2):=400.55 
+      v_num2 CONSTANT number(10,3):=4502.23;
+BEGIN
+      DBMS_OUTPUT.PUT_LINE('Number value= '|| v_num ||'  '||v_num2);
+END;
+
+===================================================================
+
+DECLARE
+      v_status boolean:=true;
+      v_num pls_integer:=100;
+BEGIN
+      DBMS_OUTPUT.PUT_LINE('Number value= '|| v_num);
+      DBMS_OUTPUT.PUT_LINE('Number Status= '|| v_status);  
+				#Boolean values cannot be printed, only used for comparison
+END;
+
+====================================================================
+
+DECLARE
+    v_cid char(2):='IN';
+    v_name varchar2(40);
+    v_regid number(2);
+BEGIN
+    select country_name,region_id into v_name,v_regid
+      from countries where country_id=v_cid;
+    
+    DBMS_OUTPUT.PUT_LINE(v_name||' '||v_regid);
+END;
+
+===================================================================
+
+DECLARE
+      v_cid char(2):='IN';
+      v_name varchar2(40);
+      v_regid number(2);
+BEGIN
+      select country_name,region_id into v_name,v_regid
+        from countries where country_id=v_cid;
+      
+      DBMS_OUTPUT.PUT_LINE(v_name||' '||v_regid);
+END;
+
+=================================================================
+
+DECLARE
+  v_employee_id NUMBER (6):= 104;
+  v_firstname varchar2(20);
+  v_phone varchar2(20);
+  v_email varchar2(25);
+  v_department_id number(4);
+  v_joining_date date;
+BEGIN
+
+  select first_name,phone_number,email,department_id,hire_date
+    into v_firstname,v_phone,v_email,v_department_id,v_joining_date
+    from employees where employee_id=v_employee_id;
+  
+  DBMS_OUTPUT.PUT_LINE ('Employee ID: ' || v_employee_id);
+  DBMS_OUTPUT.PUT_LINE ('First Name: ' || v_firstname);
+  DBMS_OUTPUT.PUT_LINE ('Phone Number: ' || v_phone);
+  DBMS_OUTPUT.PUT_LINE ('Email: ' || v_email);
+  DBMS_OUTPUT.PUT_LINE ('Department ID: ' || v_department_id);
+  DBMS_OUTPUT.PUT_LINE ('Joining Date: ' || v_joining_date);
+END;
+
+================================================================
+
+begin
+    for i in 1 ..10
+    loop
+      DBMS_OUTPUT.PUT_LINE(i);
+    end loop;
+end;
+------------------
+begin
+    for i in reverse 1 ..10
+    loop
+      DBMS_OUTPUT.PUT_LINE(i);
+    end loop;
+end;
+------------------
+declare
+  i pls_integer:=1;
+begin
+    loop
+      
+      DBMS_OUTPUT.PUT_LINE(i);
+      exit when i=10;
+      i:=i+1;
+    end loop;
+end;
+------------------
+declare
+    i pls_integer:=1;
+begin
+    while i<=10
+    loop
+      DBMS_OUTPUT.PUT_LINE(i);
+      i:=i+1;
+    end loop;
+end;
+
+=================================================================
+
+declare 
+    v_cid countries.country_id%type;
+    v_name countries.country_name%type;
+    v_reg_id countries.region_id%type;
+
+begin
+    select * into v_cid,v_name,v_reg_id from countries
+      where country_id='IN';
+      
+    dbms_output.put_line(v_cid);
+    dbms_output.put_line(v_name);
+    dbms_output.put_line(v_reg_id);
+    
+end;
+
+================================================================
+
+declare 
+    v_country_rec countries%rowtype;
+begin
+    select * into v_country_rec from countries
+      where country_id='IN';
+      
+    dbms_output.put_line(v_country_rec.country_id);
+    dbms_output.put_line(v_country_rec.country_name);
+    dbms_output.put_line(v_country_rec.region_id);
+    
+end;

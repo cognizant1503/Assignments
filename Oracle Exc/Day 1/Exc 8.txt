@@ -1,0 +1,8 @@
+declare
+    v_emp_id employees.employee_id%type:=202;
+    v_commission employees.commission_pct%type:=0.1;
+    v_job_id employees.job_id%type:='MK_REP';
+begin
+    update employees set commission_pct=v_commission where employee_id=v_emp_id
+    and job_id=v_job_id;
+end;

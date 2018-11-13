@@ -1,0 +1,20 @@
+DECLARE
+  v_employee_id employees.employee_id%type:= 104;
+  v_firstname employees.first_name%type;
+  v_phone employees.phone_number%type;
+  v_email employees.email%type;
+  v_department_id employees.department_id%type;
+  v_joining_date employees.hire_date%type;
+BEGIN
+
+  select first_name,phone_number,email,department_id,hire_date
+    into v_firstname,v_phone,v_email,v_department_id,v_joining_date
+    from employees where employee_id=v_employee_id;
+  
+  DBMS_OUTPUT.PUT_LINE ('Employee ID: ' || v_employee_id);
+  DBMS_OUTPUT.PUT_LINE ('First Name: ' || v_firstname);
+  DBMS_OUTPUT.PUT_LINE ('Phone Number: ' || v_phone);
+  DBMS_OUTPUT.PUT_LINE ('Email: ' || v_email);
+  DBMS_OUTPUT.PUT_LINE ('Department ID: ' || v_department_id);
+  DBMS_OUTPUT.PUT_LINE ('Joining Date: ' || v_joining_date);
+END;

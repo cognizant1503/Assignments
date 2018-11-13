@@ -1,0 +1,14 @@
+DECLARE
+    v_department_id departments.department_id%type:=10;
+    /*declare a variable anchored to the departments table and
+      name as rec_dept_details ,to fetch following details*/
+    v_rec_dept_details departments%rowtype;
+BEGIN
+    select * into v_rec_dept_details from departments  where department_id=v_department_id;
+    --retrieve and store the details of deparment 10 in %rowtype variable
+    --display all the retrieved details 
+    DBMS_OUTPUT.put_line(v_rec_dept_details.department_id);
+    DBMS_OUTPUT.put_line(v_rec_dept_details.department_name);
+    DBMS_OUTPUT.put_line(v_rec_dept_details.manager_id);
+    DBMS_OUTPUT.put_line(v_rec_dept_details.location_id);
+END;

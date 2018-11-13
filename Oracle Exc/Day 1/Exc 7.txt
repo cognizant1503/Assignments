@@ -1,0 +1,6 @@
+declare
+    v_emp_id employees.employee_id%type:=110;
+    v_phone employees.phone_number%type:='515.124.5845';
+begin
+    update employees set phone_number=v_phone where employee_id=v_emp_id;
+end;
