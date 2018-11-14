@@ -1,0 +1,64 @@
+declare 
+    v_employee_id employees.employee_id%type:=100;
+    v_salary employees.salary%type;
+    v_tax_amount number;
+    v_tax_per pls_integer;
+    v_emp_id employees.employee_id%type;
+    
+    e_emp_id exception;
+begin
+    select employee_id into v_emp_id from employees where employee_id=v_employee_id;
+    if v_emp_id is null then
+        raise e_emp_id;
+    else
+        select salary into v_salary from employees where employee_id=v_employee_id;
+        if v_salary<8000 then 
+            v_tax_per:=0;
+        elsif 8000<=v_salary and v_salary<15000 then
+            v_tax_per:=10;
+        else
+            v_tax_per:=15;
+        end if; 
+    end if;
+    v_tax_amount:=v_salary*v_tax_per/100;
+    DBMS_OUTPUT.PUT_LINE('Tax Amount = '||v_tax_amount);  
+exception
+    when e_emp_id then
+        DBMS_OUTPUT.put_line('No employee found with ID '||v_employee_id);
+    when others then
+        DBMS_OUTPUT.PUT_LINE('Something Wrong!!!');
+        DBMS_OUTPUT.PUT_LINE('Error Code : '||sqlcode);
+        DBMS_OUTPUT.PUT_LINE('Error Message : '||sqlerrm);
+end;
+
+=========================================================================================
+
+declare 
+    v_employee_id employees.employee_id%type:=424;
+    v_salary employees.salary%type;
+    v_tax_amount number;
+    v_tax_per pls_integer;
+    v_count pls_integer;
+  
+begin
+    select count(employee_id) into v_count from employees where employee_id=v_employee_id;
+    if v_count=0 then
+        raise_application_error(-20002,'Employee with Emoplyee ID '||v_employee_id||' is not found');
+    else
+        select salary into v_salary from employees where employee_id=v_employee_id;
+        if v_salary<8000 then 
+            v_tax_per:=0;
+        elsif 8000<=v_salary and v_salary<15000 then
+            v_tax_per:=10;
+        else
+            v_tax_per:=15;
+        end if; 
+    end if;
+    v_tax_amount:=v_salary*v_tax_per/100;
+    DBMS_OUTPUT.PUT_LINE('Tax Amount = '||v_tax_amount);  
+exception
+    when others then
+        DBMS_OUTPUT.PUT_LINE('Something Wrong!!!');
+        DBMS_OUTPUT.PUT_LINE('Error Code : '||sqlcode);
+        DBMS_OUTPUT.PUT_LINE('Error Message : '||sqlerrm);
+end;

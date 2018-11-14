@@ -1,0 +1,28 @@
+declare 
+    v_emp_id job_history.employee_id%type:=100;
+    v_start_date job_history.start_date%type;
+    v_end_date job_history.end_date%type;
+    v_job_id job_history.job_id%type;
+begin
+    
+    select employee_id,start_date,end_date,job_id 
+      into v_emp_id,v_start_date,v_end_date,v_job_id
+      from job_history where employee_id=v_emp_id and end_date=(
+        select max(end_date) from job_history 
+          where employee_id=v_emp_id group by v_emp_id);
+    
+    dbms_output.put_line('Employee Id : '||v_emp_id);
+    dbms_output.put_line('Start Date : '||v_start_date);
+    dbms_output.put_line('End Date : '|| v_end_date);
+    dbms_output.put_line('Job ID : '||v_job_id);
+    
+Exception
+  when NO_DATA_FOUND then
+    DBMS_OUTPUT.PUT_LINE('Employee ID '||v_emp_id||' has no job history.');
+  when too_many_rows then
+    DBMS_OUTPUT.PUT_LINE('Too many rows found');
+  when others then
+    DBMS_OUTPUT.PUT_LINE('Something Went wrong');  
+    dbms_output.put_line('Error Code : '||SQLCODE);
+    dbms_output.put_line('Error Message : '||SQLERRM);
+end;

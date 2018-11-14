@@ -1,0 +1,17 @@
+declare 
+    v_job_id jobs.job_id%TYPE:='MGR';
+    v_job_rec jobs%rowtype;
+begin
+    select * into v_job_rec from jobs where job_id=v_job_id;
+    DBMS_OUTPUT.put_line('Job ID : '||v_job_rec.job_id);
+    DBMS_OUTPUT.put_line('Job Title : '||v_job_rec.job_title);
+    DBMS_OUTPUT.put_line('Minimum Salary : '||v_job_rec.min_salary);
+    DBMS_OUTPUT.put_line('Maximum Salary : '||v_job_rec.max_salary);
+exception
+    when no_data_found then
+        DBMS_OUTPUT.put_line('No job found with job id '||v_job_id);
+    when others then
+        DBMS_OUTPUT.PUT_LINE('Something Wrong!!!');
+        DBMS_OUTPUT.PUT_LINE('Error Code : '||sqlcode);
+        DBMS_OUTPUT.PUT_LINE('Error Message : '||sqlerrm);
+end;

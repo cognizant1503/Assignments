@@ -1,0 +1,98 @@
+declare 
+      v_dept_id departments.department_id%type:=111;
+      v_dept_name departments.department_name%type:='Sales';
+      v_mgr_id departments.manager_id%type:=222;
+      v_location departments.location_id%type:=1500;
+      v_mcount pls_integer;
+      v_lcount pls_integer;
+            
+      e_mgr exception;
+      e_location exception;
+begin
+      select count(employee_id) into v_mcount from employees where employee_id=v_mgr_id;
+      select count(location_id) into v_lcount from locations where location_id=v_location;
+      if v_mcount=0 then
+          raise e_mgr;
+      elsif v_lcount=0 then
+          raise e_location;
+      else
+          insert into departments values(v_dept_id,v_dept_name,v_mgr_id,v_location);
+          DBMS_OUTPUT.put_line('Successful Insertion');
+      end if;
+Exception
+      when dup_val_on_index then
+          dbms_output.put_line('Department ID : '||v_dept_id||' already exists.');
+      when e_mgr then
+          dbms_output.put_line('Manager not found');
+      when e_location then
+          dbms_output.put_line('Location not found');
+      when others then
+          dbms_output.put_line('Something went wrong');
+          dbms_output.put_line('Error Code : '||sqlcode);
+          dbms_output.put_line('Error Message : '||sqlerrm);
+end;
+================================================================================================
+
+declare 
+      v_dept_id departments.department_id%type:=111;
+      v_dept_name departments.department_name%type:='Sales';
+      v_mgr_id departments.manager_id%type:=222;
+      v_location departments.location_id%type:=1500;
+      v_mcount pls_integer;
+      v_lcount pls_integer;
+begin
+      select count(employee_id) into v_mcount from employees where employee_id=v_mgr_id;
+      select count(location_id) into v_lcount from locations where location_id=v_location;
+      if v_mcount=0 then
+          raise_application_error(-20001,'manager not found');
+      elsif v_lcount=0 then
+          raise_application_error(-20002,'location not found');
+      else
+          insert into departments values(v_dept_id,v_dept_name,v_mgr_id,v_location);
+          DBMS_OUTPUT.put_line('Successful Insertion');
+      end if;
+Exception
+      when others then
+          dbms_output.put_line('Something went wrong');
+          dbms_output.put_line('Error Code : '||sqlcode);
+          dbms_output.put_line('Error Message : '||sqlerrm);
+end;
+=======================================================================================================
+
+declare 
+      v_dept_id departments.department_id%type:=111;
+      v_dept_name departments.department_name%type;
+      v_mgr_id departments.manager_id%type:=100;
+      v_location departments.location_id%type:=1500;
+      v_mcount pls_integer;
+      v_lcount pls_integer;
+            
+      e_mgr exception;
+      e_location exception;
+      e_null exception;
+      PRAGMA EXCEPTION_INIT (e_null, -01400);
+begin
+      select count(employee_id) into v_mcount from employees where employee_id=v_mgr_id;
+      select count(location_id) into v_lcount from locations where location_id=v_location;
+      if v_mcount=0 then
+          raise e_mgr;
+      elsif v_lcount=0 then
+          raise e_location;
+      else
+          insert into departments values(v_dept_id,v_dept_name,v_mgr_id,v_location);
+          DBMS_OUTPUT.put_line('Successful Insertion');
+      end if;
+Exception
+      when e_null then
+          dbms_output.put_line('Not null constraint Violation');
+      when dup_val_on_index then
+          dbms_output.put_line('Department ID : '||v_dept_id||' already exists.');
+      when e_mgr then
+          dbms_output.put_line('Manager not found');
+      when e_location then
+          dbms_output.put_line('Location not found');
+      when others then
+          dbms_output.put_line('Something went wrong');
+          dbms_output.put_line('Error Code : '||sqlcode);
+          dbms_output.put_line('Error Message : '||sqlerrm);
+end;

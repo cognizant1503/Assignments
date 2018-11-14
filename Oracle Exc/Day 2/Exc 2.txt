@@ -1,0 +1,16 @@
+declare 
+    v_first_name employees.first_name%type:='John';
+    v_phone employees.phone_number%type;
+begin
+    select phone_number into v_phone from employees where first_name='John';
+    dbms_output.put_line('Phone number : '||v_phone);
+Exception
+    when no_data_found then
+        dbms_output.put_line('No employee found with first name '||v_first_name);
+    when too_many_rows then
+        dbms_output.put_line('More than one employee found with first name '||v_first_name); 
+    when others then
+        DBMS_OUTPUT.PUT_LINE('Something Wrong!!!');
+        DBMS_OUTPUT.PUT_LINE('Error Code : '||sqlcode);
+        DBMS_OUTPUT.PUT_LINE('Error Message : '||sqlerrm);
+end;

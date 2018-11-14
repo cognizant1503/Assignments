@@ -1,0 +1,42 @@
+declare 
+    v_employee_id employees.employee_id%type:=123;
+    v_salary employees.salary%type;
+    v_new_salary employees.salary%type:=5500;
+    
+    e_salary exception;
+begin
+    select salary into v_salary from employees where employee_id=v_employee_id;
+    if v_salary>v_new_salary then
+        raise e_salary;
+    else
+        update employees set salary=5500 where employee_id=123;
+    end if;
+exception
+    when e_salary then
+        DBMS_OUTPUT.put_line('New salary is less than the Current salary');
+    when others then
+        DBMS_OUTPUT.PUT_LINE('Something Wrong!!!');
+        DBMS_OUTPUT.PUT_LINE('Error Code : '||sqlcode);
+        DBMS_OUTPUT.PUT_LINE('Error Message : '||sqlerrm);
+end;
+
+==================================================================================
+
+declare 
+    v_employee_id employees.employee_id%type:=123;
+    v_salary employees.salary%type;
+    v_new_salary employees.salary%type:=5500;
+    
+begin
+    select salary into v_salary from employees where employee_id=v_employee_id;
+    if v_salary>v_new_salary then
+        raise_application_error(-20015,'New salary is less than the Current salary');
+    else
+        update employees set salary=5500 where employee_id=123;
+    end if;
+exception
+    when others then
+        DBMS_OUTPUT.PUT_LINE('Something Wrong!!!');
+        DBMS_OUTPUT.PUT_LINE('Error Code : '||sqlcode);
+        DBMS_OUTPUT.PUT_LINE('Error Message : '||sqlerrm);
+end;

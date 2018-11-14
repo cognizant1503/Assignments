@@ -1,0 +1,15 @@
+declare 
+    e_integrity_constant Exception;
+    PRAGMA EXCEPTION_INIT (e_integrity_constant, -02292);
+begin
+    delete from departments where department_id=90;
+Exception
+    when e_integrity_constant then
+        dbms_output.put_line('Cannot delete the department');
+    when no_data_found then
+        dbms_output.put_line('No department found');
+    when others then
+        DBMS_OUTPUT.PUT_LINE('Something Wrong!!!');
+        DBMS_OUTPUT.PUT_LINE('Error Code : '||sqlcode);
+        DBMS_OUTPUT.PUT_LINE('Error Message : '||sqlerrm);
+end;
