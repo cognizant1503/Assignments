@@ -1,0 +1,32 @@
+create or replace function sf_get_manager_name(
+    emp_id employees.employee_id%type
+)
+return employees.first_name%type
+is 
+    p_fname employees.first_name%type;
+    p_lname employees.last_name%type;
+    
+    p_name employees.last_name%type;
+begin
+    select manager_id into p_mid from employees where employee_id=emp_id;
+    if(p_mid is not null) then
+        select first_name,last_name into p_fname,p_lname from employees where employee_id=p_mid;
+        p_name:=p_fname||' '||p_lname;
+        return p_name;
+    else
+        return -2;
+    end if;
+exception
+  when no_data_found then
+      return -1;
+  when others then
+    return -3;
+end;
+
+declare
+  v_emp_id employees.employee_id%type:=115;
+  v_res employees.first_name%type;
+begin
+    v_res:=sf_get_manager_name(v_emp_id);
+    dbms_output.put_line(v_res);
+end;

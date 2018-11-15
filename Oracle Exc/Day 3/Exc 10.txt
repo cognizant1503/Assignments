@@ -1,0 +1,78 @@
+create sequence seq_emp_id
+start with 901
+increment by 1;
+
+create or replace procedure sp_add_employee(
+      p_fname employees.first_name%type,
+      p_lname employees.last_name%type,
+      p_email employees.email%type,
+      p_hire_date employees.hire_date%type,
+      p_job_id employees.job_id%type,
+      p_dept_name departments.department_name%type,
+      p_status out pls_integer
+)
+is
+    v_ecount pls_integer;
+    v_jcount pls_integer;
+    v_dcount pls_integer;
+    
+    v_emp_id number;
+    v_dept_id employees.department_id%type;
+    v_mid employees.manager_id%type;
+begin
+    select count(email) into v_ecount from employees where email=p_email;
+    if(v_ecount>0) then 
+        p_status:=-1;
+        return;
+    else
+        if(p_hire_date>=sysdate) then
+            select count(job_id) into v_jcount from jobs where job_id=p_job_id;
+            if(v_jcount>0) then
+                select count(department_name) into v_dcount from departments where department_name=p_dept_name;
+                if(v_dcount>0) then
+                    v_emp_id:=seq_emp_id.nextval; 
+                    v_dept_id:=sf_get_dept_id(p_dept_name);
+                    select manager_id into v_mid from departments where department_id=v_dept_id;
+                    insert into employees(employee_id,first_name,last_name,email,hire_date,job_id,manager_id,department_id)
+                        values(v_emp_id,p_fname,p_lname,p_email,p_hire_date,p_job_id,v_mid,v_dept_id);
+                      p_status:=0;
+                      return;
+                else
+                    p_status:=-4;
+                    return ;
+                end if;
+            else
+                p_status:=-3;
+                return;
+            end if;
+        else
+            p_status:=-2;
+            return;
+        end if;
+    end if;
+exception
+    when others then
+          p_status:=-5;
+          return;
+end;
+
+
+declare
+    v_status pls_integer;
+begin
+    sp_add_employee('Adam','Hilton','Adam_Hilton',sysdate,'FI_ACCOUNT','Finance',v_status);
+    
+    if(v_status=0) then
+        dbms_output.put_line('insertion is successful');
+    elsif(v_status=-1) then
+        dbms_output.put_line('email is invalid');
+    elsif(v_status=-2) then
+        dbms_output.put_line('hire_date is less than today’s date');
+     elsif(v_status=-3) then
+        dbms_output.put_line('job_id does not exist ');
+     elsif(v_status=-4) then
+        dbms_output.put_line('department_name is invalid ');
+    else
+        dbms_output.put_line('any other exception');
+    end if;
+end;

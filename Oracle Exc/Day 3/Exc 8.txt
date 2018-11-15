@@ -1,0 +1,45 @@
+create or replace procedure sp_update_comm_pct(
+      emp_id employees.employee_id%type,
+      p_status out number
+)
+is
+      v_count pls_integer;
+      v_count1 pls_integer;
+begin
+    select count(employee_id) into v_count from employees where employee_id=emp_id;
+    if(v_count>0) then
+        select count(employee_id) into v_count1 from employees where job_id='MK_REP' and employee_id=emp_id;
+        if(v_count1>0) then
+            update employees set commission_pct=0.1 where employee_id=emp_id;
+            p_status:=0;
+            return;
+        else
+            p_status:=-2;
+            return;
+        end if;
+    else
+      p_status:=-1;
+      return;
+    end if;
+exception 
+    when others then
+        p_status:=-3;
+        return;
+end;
+
+
+declare
+      v_status pls_integer;
+begin
+      sp_update_comm_pct(115,v_status);
+      if(v_status=0) then
+        dbms_output.put_line(' successful update');
+    elsif(v_status=-1) then
+        dbms_output.put_line('employee_id is invalid');
+    elsif(v_status=-2) then
+        dbms_output.put_line('employee is not a marketing rep');
+    else
+        dbms_output.put_line('any other error');
+    end if;
+      
+end;

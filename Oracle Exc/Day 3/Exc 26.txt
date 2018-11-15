@@ -1,0 +1,36 @@
+create or replace function sf_get_dept_id(v_dept_name departments.department_name%type)
+return number
+is
+  v_dept_id departments.department_id%type;
+begin
+  select department_id into v_dept_id from departments where department_name=v_dept_name;
+  return v_dept_id;
+exception
+ when others then
+  return -1;
+end;
+
+------------------------------INVOKING FINANCE DEPARTMENT--------------------------
+declare
+    v_dept_id departments.department_id%type;
+    v_dept_name departments.department_name%type:='Finance';
+begin
+  v_dept_id:=sf_get_dept_id(v_dept_name);
+  if v_dept_id !=-1 then
+    dbms_output.put_line('Department id of '||v_dept_name||' is '||v_dept_id);
+  else
+    dbms_output.put_line('Something went Wrong');
+  end if;
+end;
+-----------------------------------INVOKEING SALES DEPARTMENT---------------------
+declare
+    v_dept_id departments.department_id%type;
+    v_dept_name departments.department_name%type:='Sales';
+begin
+  v_dept_id:=sf_get_dept_id(v_dept_name);
+  if v_dept_id !=-1 then
+    dbms_output.put_line('Department id of'||v_dept_name||' is '||v_dept_id);
+  else
+    dbms_output.put_line('Something went Wrong');
+  end if;
+end;

@@ -1,0 +1,25 @@
+create or replace function sf_get_emp_name_by_email(
+    p_email employees.email%type
+)
+return employees.first_name%type
+is 
+    p_fname employees.first_name%type;
+    p_lname employees.last_name%type;
+    
+    p_name employees.last_name%type;
+begin
+    select first_name,last_name into p_fname,p_lname from employees where email=p_email;
+    p_name:=p_fname||' '||p_lname;
+    return p_name;
+exception
+  when others then
+    return -1;
+end;
+
+declare
+  v_email employees.email%type:='S_KING';
+  v_res employees.first_name%type;
+begin
+    v_res:=sf_get_emp_name_by_email(v_email);
+    dbms_output.put_line(v_res);
+end;

@@ -1,0 +1,32 @@
+create or replace function sf_is_manager(
+        emp_id employees.employee_id%type
+)
+return boolean
+is 
+  v_count pls_integer;
+begin
+  select count(manager_id) into v_count from employees where manager_id=emp_id;
+  
+  if(v_count>0) then
+      return true;
+  else
+    return false;
+  end if;
+exception
+  when others then
+      return null;
+end;
+
+declare
+    emp_id employees.employee_id%type:=100;
+    v_res boolean;
+begin
+    v_res:=sf_is_manager(emp_id);
+    if(v_res=true) then
+        dbms_output.put_line('True');
+    elsif(v_res=false) then
+        dbms_output.put_line('False');
+    else
+        dbms_output.put_line('NULL');
+    end if;
+end;

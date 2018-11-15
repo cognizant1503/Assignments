@@ -1,0 +1,21 @@
+create or replace function sf_get_experience_employee(
+    emp_id employees.employee_id%type
+)
+return number
+is 
+    expe number(3,1);
+begin
+ select (sysdate-hire_date)/365 into expe from employees where employee_id=emp_id;
+ return expe;
+exception
+  when others then
+    return -1;
+end;
+
+declare
+  v_emp_id employees.employee_id%type:=100;
+  v_res number(3,1);
+begin
+    v_res:=SF_GET_EXPERIENCE_EMPLOYEE(v_emp_id);
+    dbms_output.put_line(v_res);
+end;

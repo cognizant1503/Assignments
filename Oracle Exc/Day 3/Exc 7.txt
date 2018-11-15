@@ -1,0 +1,56 @@
+create or replace procedure sp_update_contact(
+                                              emp_id employees.employee_id%type,
+                                              phone employees.phone_number%type,
+                                              status out number
+                                              )
+is
+  v_count pls_integer;
+begin
+  select count(employee_id) into v_count from employees where employee_id=emp_id;
+  
+  if(v_count!=0) then
+      update employees set phone_number=phone where employee_id=emp_id;
+      status:=0;
+      return;
+  else
+      status:=-1;
+      return ;
+  end if;
+exception
+  when others then
+      status:=-2;
+      return;
+end;
+
+----------------------------------------------------------------------------------------------------
+
+declare
+    v_emp_id employees.employee_id%type:=138;
+    v_phone employees.phone_number%type:='180.121.2022';
+    v_status number;
+begin
+      sp_update_contact(v_emp_id,v_phone,v_status);
+      
+      if(v_status=0) then
+            dbms_output.put_line('Phone number is updated');
+      elsif(v_status=-1) then
+            dbms_output.put_line('Employee does not exist');
+      else
+            dbms_output.put_line('Some error occurred');
+      end if;
+end;
+
+--------------------------------------------------------------------------------------------
+declare
+    v_status number;
+begin
+      sp_update_contact(138,'180.121.2022.9898.909',v_status);
+      
+      if(v_status=0) then
+            dbms_output.put_line('Phone number is updated');
+      elsif(v_status=-1) then
+            dbms_output.put_line('Employee does not exist');
+      else
+            dbms_output.put_line('Some error occurred');
+      end if;
+end;

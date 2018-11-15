@@ -1,0 +1,46 @@
+CREATE OR REPLACE PROCEDURE sp_add_job(
+    p_job_id    IN jobs.job_id%TYPE,
+    p_job_title IN jobs.job_title%TYPE,
+    p_min_salary jobs.min_salary%TYPE,
+    p_max_salary jobs.max_salary%TYPE,
+    p_status OUT NUMBER)
+IS
+  --Used in job_id validation
+  v_count_of_jobs PLS_INTEGER;
+BEGIN
+  --Validating job_id
+  SELECT COUNT(Job_id) INTO v_count_of_jobs
+  FROM jobs WHERE job_id = p_job_ID;
+  IF(v_count_of_jobs=0) THEN
+    --Inserting the new job in the jobs table
+    INSERT INTO Jobs VALUES
+      (p_job_ID,p_job_title,p_min_salary,p_max_salary);
+    COMMIT;
+    --Insert successful.Setting p_status as 0
+    p_status:=0;
+  ELSE
+    --Job already exists.Setting p_status as -1
+    p_status:=-1;
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    p_status:=-2;
+END;
+
+declare 
+  v_job_ID     VARCHAR2(10) := 'IT_PROG';
+  v_job_title  VARCHAR2(35) := 'Programmer';
+  v_min_salary NUMBER(6)    := 5000;
+  v_max_salary NUMBER(6)    := 10000;
+  v_status number;
+begin
+  sp_add_job(v_job_ID,v_job_title,v_min_salary,v_max_salary,v_status);
+  
+  if(v_status=0) then
+    dbms_output.put_line('Succesful Insertion');
+  elsif(v_status=-1) then
+    dbms_output.put_line('Job Already Exists');
+  else
+      dbms_output.put_line('Some Error Occured');
+  end if;
+end;

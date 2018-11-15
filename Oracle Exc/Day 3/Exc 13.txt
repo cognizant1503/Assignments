@@ -1,0 +1,46 @@
+create or replace procedure sp_add_country(
+      p_cid countries.country_id%type,
+      p_cname countries.country_name%type,
+      p_rid countries.region_id%type,
+      p_status out pls_integer
+)
+is
+    v_rcount pls_integer;
+    v_count pls_integer;
+begin
+      select count(region_id) into v_rcount from regions where region_id=p_rid;
+      if(v_rcount>0) then
+          select count(country_id) into v_count from countries where country_id=p_cid;
+          if(v_count>0) then
+              p_status:=-2;
+              return;
+          else
+              insert into countries values(p_cid,p_cname,p_rid);
+              p_status:=0;
+              return;
+          end if;
+      else
+          p_status:=-1;
+          return;
+      end if;
+exception 
+    when others then
+        p_status:=-3;
+        return;
+end;
+
+declare
+    v_status pls_integer;
+begin
+    sp_add_country('SN','Sydney',6,v_status);
+    
+    if(v_status=0) then
+        dbms_output.put_line('Successful insertion');
+    elsif(v_status=-1) then
+        dbms_output.put_line('region_id is invalid');
+    elsif(v_status=-2) then
+        dbms_output.put_line('country_id already exist');
+    else
+        dbms_output.put_line('any other error');
+    end if;
+end;

@@ -1,0 +1,32 @@
+create or replace function sf_is_valid_job(
+        p_job_title jobs.job_title%type
+)
+return boolean
+is 
+  v_count pls_integer;
+begin
+  select count(job_title) into v_count from jobs where job_title=p_job_title;
+  
+  if(v_count>0) then
+      return true;
+  else
+    return false;
+  end if;
+exception
+  when others then
+      return null;
+end;
+
+declare
+    v_job_title jobs.job_title%type:='Clerk';
+    v_res boolean;
+begin
+    v_res:=sf_is_valid_job(v_job_title);
+    if(v_res=true) then
+        dbms_output.put_line('True');
+    elsif(v_res=false) then
+        dbms_output.put_line('False');
+    else
+        dbms_output.put_line('NULL');
+    end if;
+end;

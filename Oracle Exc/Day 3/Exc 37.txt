@@ -1,0 +1,36 @@
+create or replace function sf_get_location_address(
+  dept_id departments.department_id%type
+)
+return varchar2
+is
+    v_lid locations.location_id%type;
+    
+    v_sa locations.street_address%type;
+    v_city locations.city%type;
+    v_pc locations.postal_code%type;
+    v_cid locations.country_id%type;
+    v_country_name countries.country_name%type;
+    
+    v_address varchar2(1000);
+begin
+   select location_id into v_lid from departments where department_id=dept_id;
+   
+   select street_address,city,postal_code,country_id
+          into v_sa,v_city,v_pc,v_cid from locations where location_id=v_lid;
+          
+  select country_name into v_country_name from countries where country_id=v_cid;
+  
+  v_address:=v_sa||','||v_city||','||v_pc||','||v_country_name;
+  return v_address;
+exception
+    when others then
+        return -1;
+end;
+
+declare
+    dept_id departments.department_id%type:=31;
+    v_res varchar2(1000);
+begin
+    v_res:=sf_get_location_address(dept_id);
+    dbms_output.put_line(v_res);
+end;

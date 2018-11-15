@@ -1,0 +1,23 @@
+create or replace function sf_get_max_salary(
+    p_job_id jobs.job_id%type
+) 
+return jobs.max_salary%type
+is
+  max_sal jobs.max_salary%type;
+begin
+  select max_salary into max_sal from jobs where job_id=p_job_id;
+  return max_sal;
+exception
+ when no_data_found then
+    return -1;
+  when others then
+    return -2;
+end;
+
+declare
+  v_job_id jobs.job_id%type:='FI_MGR';
+  v_res pls_integer;
+begin
+  v_res:=sf_get_max_salary(v_job_id);
+  dbms_output.put_line(v_res);
+end;

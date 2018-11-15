@@ -1,0 +1,21 @@
+create or replace function sf_get_manager_id(
+    emp_id employees.employee_id%type
+)
+return employees.manager_id%type
+is 
+    p_mid employees.manager_id%type;
+begin
+ select manager_id into p_mid from employees where employee_id=emp_id;
+ return p_mid;
+exception
+  when others then
+    return -1;
+end;
+
+declare
+  v_emp_id employees.employee_id%type:=4444;
+  v_res employees.manager_id%type;
+begin
+    v_res:=sf_get_manager_id(v_emp_id);
+    dbms_output.put_line(v_res);
+end;

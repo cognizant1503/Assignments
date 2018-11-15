@@ -1,0 +1,60 @@
+create or replace procedure sp_update_manager(
+    p_dept_id departments.department_id%type,
+    p_mid departments.manager_id%type,
+    p_status out number
+)
+is
+    v_ecount pls_integer;
+    v_dcount pls_integer;
+    v_mdept employees.department_id%type;
+begin
+    select count(employee_id) into v_ecount from employees where employee_id=p_mid;
+    if(v_ecount>0) then
+        select count(department_id) into v_dcount from departments where department_id=p_dept_id;
+        if(v_dcount>0) then
+            select department_id into v_mdept from employees where employee_id=p_mid;
+            if(v_mdept=p_dept_id) then
+                update departments set manager_id=p_mid where department_id=p_dept_id;
+                p_status:=0;
+                return;
+            else
+                p_status:=-3;
+                return;
+            end if;
+        else
+            p_status:=-2;
+            return;
+        end if;
+    else
+        p_status:=-1;
+        return;
+    end if;
+exception
+    when others then
+        p_status:=-4;
+        return;
+end;
+
+
+declare
+      v_status pls_integer;
+      v_mid employees.employee_id%type:=105;
+      v_dept_name departments.department_name%type:='IT';
+      v_dept_id departments.department_id%type;
+begin
+      select department_id into v_dept_id from departments where department_name=v_dept_name; 
+      sp_update_manager(v_dept_id,v_mid,v_status);
+      
+      if(v_status=0) then
+        dbms_output.put_line('successful insertion');
+    elsif(v_status=-1) then
+        dbms_output.put_line('passed manager_id is an invalid employee');
+    elsif(v_status=-2) then
+        dbms_output.put_line('department_id is invalid');
+     elsif(v_status=-3) then
+        dbms_output.put_line('new manager does not belong to that department ');
+    else
+        dbms_output.put_line('any other exception');
+    end if;
+      
+end;

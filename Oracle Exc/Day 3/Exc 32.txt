@@ -1,0 +1,25 @@
+create or replace function sf_get_manager_name(
+    dept_id departments.department_id%type
+)
+return employees.first_name%type
+is 
+  p_mid employees.employee_id%type;
+  p_mname employees.first_name%type;
+begin
+    select manager_id into p_mid from departments where department_id=dept_id;
+    select first_name into p_mname from employees where employee_id=p_mid;
+    return p_mname;
+    
+exception
+    when others then
+      return -1;
+end;
+
+declare 
+    v_pname employees.first_name%type;
+    v_dept_id departments.department_id%type:=51;
+    
+begin
+    v_pname:=sf_get_manager_name(v_dept_id);
+    DBMS_OUTPUT.put_line(v_pname);
+end;
