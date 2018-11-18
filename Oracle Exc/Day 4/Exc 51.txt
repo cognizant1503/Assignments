@@ -1,0 +1,13 @@
+create or replace trigger trg_check_day
+    before insert on employees
+declare
+    v_todays_date date;
+begin
+    v_todays_date:=sysdate;
+    
+    if to_char(v_todays_date,'DAY')='SUNDAY' then
+          raise_application_error(-20001,'Cannot add employees on Sunday');
+    end if;
+end;
+
+insert into employees values(1002,'vihari','Devarapalli','vicky',NULL,sysdate,'FI_MGR',NULL,NULL,NULL,NULL)

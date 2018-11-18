@@ -1,0 +1,14 @@
+set serveroutput on
+
+declare
+      cursor country(p_reg_id countries.region_id%type)
+          is select country_id,country_name from countries where region_id=p_reg_id;
+begin
+      dbms_output.put_line('Country Details of Europe region:');
+      dbms_output.put_line('Country ID'||'     '||'Country Name');
+      for rec in country(1)
+      loop
+          dbms_output.put_line('     '||rec.country_id||'           '||rec.country_name);
+      end loop;
+end;
+      

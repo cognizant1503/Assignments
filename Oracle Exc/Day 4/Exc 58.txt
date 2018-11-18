@@ -1,0 +1,23 @@
+set serveroutput on
+
+declare
+    cursor reg
+          is select *from regions where region_id=5;
+          v_count pls_integer;
+          v_region reg%rowtype;
+begin
+    select count(region_id) into v_count from regions where region_name='South America';
+    if(v_count=0) then
+        insert into regions values(5,'South America');
+    end if;
+    open reg;
+          fetch reg into v_region;
+          if(sql%found) then
+              insert into countries values('QR','Qwerty',v_region.region_id);
+              dbms_output.put_line('123');
+          else
+              raise_application_error(-20002,'Region ID does not exist');
+          end if;
+    close reg;
+end;
+    

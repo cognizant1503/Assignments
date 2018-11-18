@@ -1,0 +1,11 @@
+declare 
+    cursor emp 
+        is select employee_id,first_name,last_name from employees where round((sysdate-hire_date)/365)>25;
+begin
+    dbms_output.put_line('Employees who completed more than 25 years');
+    dbms_output.put_line('Employee ID'||'         '||'Employee Name');
+      for rec in emp
+      loop
+          dbms_output.put_line('     '||rec.employee_id||'           '||rec.first_name||' '||rec.last_name);
+      end loop;
+end;

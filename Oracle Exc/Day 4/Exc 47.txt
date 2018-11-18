@@ -1,0 +1,45 @@
+set serveroutput on
+
+CREATE OR REPLACE PROCEDURE sp_employee_details(
+    p_department_id departments.department_id%TYPE,
+    p_dept_emp_count OUT NUMBER)
+IS
+    cursor emp_details
+        is select employee_id,salary,hire_date from employees where department_id=p_department_id;
+    emp_rec emp_details%rowtype;
+    v_count pls_integer;
+    
+  --Declare a cursor
+  --Declare variables to store the data
+BEGIN
+  open emp_details;
+    loop
+        fetch emp_details into emp_rec;
+        exit when emp_details%notfound;
+        dbms_output.put_line('Employee ID '||emp_rec.employee_id);
+        dbms_output.put_line('Salary '||emp_rec.salary);
+        dbms_output.put_line('Hire Date '||emp_rec.hire_date);
+        dbms_output.put_line('----------------------------------------------------');
+        v_count:=emp_details%rowcount;
+    end loop;
+  close emp_details;
+  
+  --Retrieve the values using cursor 
+  --set the OUT parameter
+  --display the values
+  p_dept_emp_count:=v_count; 
+  DBMS_OUTPUT.PUT_LINE (' ');
+  return;
+exception
+    when others then
+      p_dept_emp_count:=-1;
+      return;
+END;
+
+DECLARE
+v_dept_id departments.department_id%TYPE:=20;
+v_dept_emp_count NUMBER;
+BEGIN
+  sp_employee_details(v_dept_id, v_dept_emp_count);
+  DBMS_OUTPUT.PUT_LINE('Employees in department ' ||v_dept_id|| ' is '||v_dept_emp_count);
+END;

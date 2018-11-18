@@ -1,0 +1,48 @@
+set serveroutput on
+
+create or replace procedure sp_emp_details(
+        mid employees.manager_id%type,
+        emp_count out number
+)
+
+is
+      cursor emp_details
+          is select employee_id,first_name,job_id,department_id,hire_date from employees where manager_id=mid;
+      v_count pls_integer;
+      emp_rec emp_details%rowtype;
+      v_job_title jobs.job_title%type;
+begin
+    open emp_details;
+        loop
+              fetch emp_details into emp_rec;
+              exit when emp_details%notfound;
+              select job_title into v_job_title from jobs where job_id=emp_rec.job_id;
+              dbms_output.put_line('Employee ID : '||emp_rec.employee_id);
+              dbms_output.put_line('Name : '||emp_rec.first_name);
+              dbms_output.put_line('Job Title : '||v_job_title);
+              dbms_output.put_line('Department ID : '||emp_rec.department_id);
+              dbms_output.put_line('Joining Date : '||emp_rec.hire_date);
+              dbms_output.put_line('---------------------------------------------------------------------------------');              
+              v_count:=emp_details%rowcount;
+        end loop;
+    close emp_details;
+    emp_count:=v_count;
+exception
+      when others then
+            emp_count:=-1;
+            return;
+end;
+
+
+
+declare
+    mid employees.manager_id%type:=103;
+    v_count pls_integer;
+begin
+    sp_emp_details(mid,v_count);
+    if(v_count<>-1) then
+          dbms_output.put_line('Number of Employees under manager '||mid||' are '||v_count);
+    else
+          raise_application_error(-20015,'No employees found under the manager');
+    end if;
+end;

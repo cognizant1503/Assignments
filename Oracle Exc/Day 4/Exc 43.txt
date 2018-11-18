@@ -1,0 +1,36 @@
+CREATE TABLE DEPT_MANAGER_LOG
+(DEPARTMENT_ID NUMBER,
+MANAGER_ID NUMBER,
+START_DATE DATE,
+END_DATE DATE,
+USER_NAME VARCHAR2(20)
+)
+
+CREATE OR REPLACE TRIGGER trg_manager_log
+   BEFORE  INSERT OR UPDATE OF MANAGER_ID ON DEPARTMENTS 
+  FOR EACH ROW 
+  DECLARE
+  BEGIN
+    IF INSERTING THEN
+    /*Logic for inserting manager details will go here
+    when a manager is assigned for a department end_date will be null and start_date will be sysdate*/
+          insert into dept_manager_log values(:new.department_id,:new.manager_id,sysdate,NULL,user);
+
+    ELSIF UPDATING THEN
+    /*updation of end_date for previous manager and insertion of new manager details will go here
+    when a manger is changed end_date of previous manager will be sysdate 
+    start_date of new manager will be sysdate and end_date will be null*/
+
+
+          update dept_manager_log set end_date=sysdate where manager_id=:old.manager_id and department_id= :old.department_id;
+              
+          insert into dept_manager_log values(:new.department_id,:new.manager_id,sysdate,NULL,user);
+              
+    END IF;
+  END;
+  
+update departments set manager_id=200 where department_id=60;
+
+
+
+select *from dept_manager_log;

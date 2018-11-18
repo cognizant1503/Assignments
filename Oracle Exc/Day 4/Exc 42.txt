@@ -1,0 +1,22 @@
+create or replace trigger trg_check_sal
+    before insert or update of salary on employees
+for each row
+
+declare
+    v_min_sal jobs.min_salary%type;
+    v_max_sal jobs.max_salary%type;
+    
+    v_new_sal employees.salary%type:= :new.salary;
+    v_new_job employees.job_id%type:= :new.job_id;
+begin
+    select min_salary,max_salary into v_min_sal,v_max_sal from jobs where job_id=upper(v_new_job);
+    
+    if v_new_sal<v_min_sal then
+        :new.salary :=v_min_sal;
+    elsif v_new_sal>v_max_sal then
+        raise_application_error(-20025,'Employee salary cannot be more than max salary of his job');    
+    end if;
+end;
+
+select min_salary,max_salary from jobs where job_id='IT_PROG';
+update employees set salary=15000 where job_id='IT_PROG'

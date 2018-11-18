@@ -1,0 +1,15 @@
+create or replace trigger trg_update_sal
+    before update of salary on employees
+for each row
+
+declare
+      v_old_salary  employees.salary%type:= :old.salary;
+      v_new_salary  employees.salary%type:= :new.salary;
+      v_exception exception;
+begin
+      if v_new_salary<v_old_salary then
+          raise_application_error(-20001,'Employee salary should not be less than his current salary');
+      end if;
+end;
+
+update employees set salary=100 where employee_id=200

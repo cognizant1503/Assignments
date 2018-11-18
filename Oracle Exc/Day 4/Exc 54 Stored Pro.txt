@@ -1,0 +1,43 @@
+set serveroutput on
+
+create or replace procedure sp_country (
+            reg_id regions.region_id%type,
+            p_count out number
+)
+is
+    cursor c_details 
+          is select country_id,country_name from countries where region_id=reg_id;
+    v_count pls_integer;
+    c_rec c_details%rowtype;
+begin
+      
+      dbms_output.put_line('Country Details of Europe region:');
+      dbms_output.put_line('COUNTRY ID             Country Name');
+      open c_details;
+          loop
+              fetch c_details into c_rec;
+              exit when c_details%notfound;
+              v_count:=c_details%rowcount;
+              dbms_output.put_line(c_rec.country_id||'                       '||c_rec.country_name);
+          end loop;
+      close c_details;
+      p_count:=v_count;
+exception
+    when others then
+        v_count:=-1;
+        return;
+end;
+
+
+
+declare
+    reg_id regions.region_id%type:=3;
+    v_count pls_integer;
+begin
+    sp_country(reg_id,v_count);
+    if(v_count<>-1) then
+          dbms_output.put_line('Number of countries in the region '||reg_id||' are '||v_count);
+    else
+          raise_application_error(-20015,'No countries found with the given region id ');
+    end if;
+end;

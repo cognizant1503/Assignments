@@ -1,0 +1,18 @@
+declare
+    cursor emp_rec 
+        is select employee_id,job_id,department_id,salary from employees where salary is not null order by salary desc;
+    v_emp_rec emp_rec%rowtype;
+    v_job_title jobs.job_title%type;
+begin
+    open emp_rec;
+        loop
+            fetch emp_rec into v_emp_rec;
+            select job_title into v_job_title from jobs where job_id=v_emp_rec.job_id;
+            exit when emp_rec%rowcount>3 or emp_rec%notfound;
+            dbms_output.put_line('Employee Id :'||v_emp_rec.employee_id);
+            dbms_output.put_line('Job Title :'||v_job_title);
+            dbms_output.put_line('Department :'||v_emp_rec.department_id);
+            dbms_output.put_line('Salary :'||v_emp_rec.salary);
+        end loop;
+    close emp_rec;
+end;

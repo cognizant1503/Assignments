@@ -1,0 +1,22 @@
+declare
+    cursor dept 
+        is select department_id,department_name,manager_id from departments where location_id in
+          (select location_id from locations where country_id=
+              (select country_id from countries where country_name='Canada'));
+    v_count pls_integer;
+    v_rec dept%rowtype;
+begin
+  dbms_output.put_line('Departments in Canada');
+  open dept;
+  
+    loop
+        fetch dept into v_rec;
+        select count(employee_id) into v_count from employees where department_id=v_rec.department_id;
+        exit when dept%notfound;
+        dbms_output.put_line('Department Name '||v_rec.department_name);
+        dbms_output.put_line('Manager ID '||v_rec.manager_id);
+        dbms_output.put_line('No:of Employees '||v_count); 
+        dbms_output.put_line('--------------------------------------------------');
+    end loop;
+  close dept;
+end;

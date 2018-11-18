@@ -1,0 +1,10 @@
+create or replace trigger trg_check_min_sal 
+    before update of min_salary on jobs
+for each row when(new.job_id<>'AD_PRES')
+begin
+    if :new.min_salary<:old.min_salary then
+          raise_application_error(-20001,'New Salary should not be less than Old Salary');
+    end if;
+end;
+
+update jobs set min_salary=100 where job_id='IT_PROG'
