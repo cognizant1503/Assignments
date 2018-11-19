@@ -1,0 +1,76 @@
+set serveroutput on
+
+create or replace package pkg_tax
+is
+    function sf_tax_eligibility(empid employees.employee_id%type) return boolean;
+    function sf_tax_calc(empid employees.employee_id%type) return number;
+end pkg_tax;
+
+create or replace package body pkg_tax
+is
+    function sf_tax_eligibility(empid employees.employee_id%type)
+      return boolean
+    is
+        v_salary number;
+        v_eligible_salary constant number:=8000;
+    begin
+        select salary into v_salary from employees where employee_id=empid;
+        if(v_salary>v_eligible_salary) then
+            return True;
+        else
+            return False;
+        end if;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RETURN NULL;
+    end;
+    
+    function sf_tax_calc(empid employees.employee_id%type) return number
+    is
+        v_salary employees.salary%TYPE ;
+        v_tax_percentage NUMBER(2);
+        v_tax_amount NUMBER(8,2);
+    begin
+        SELECT salary INTO v_salary
+            FROM employees WHERE employee_id = empid;
+    --logic for tax percentage computation
+            IF v_salary        >=15000 THEN
+                  v_tax_percentage := 15;
+            ELSIF v_salary      < 15000 AND v_salary >= 8000 THEN
+                  v_tax_percentage := 10;
+            ELSE
+                  v_tax_percentage := 0;
+            END IF;
+    --formula for tax calculation
+            v_tax_amount:=v_salary*v_tax_percentage*0.01;
+            RETURN v_tax_amount;
+    EXCEPTION
+        WHEN OTHERS THEN
+          RETURN -1;     
+    end;
+
+end pkg_tax;
+
+declare 
+    v_tax number;
+    v_eli boolean;
+begin
+    v_eli:=pkg_tax.sf_tax_eligibility(105);
+    v_tax:=pkg_tax.sf_tax_calc(100);
+    
+    if v_eli=true then
+        dbms_output.put_line('Eligible');
+    elsif v_eli=false then
+        dbms_output.put_line('Not Eligible');
+    else
+        dbms_output.put_line('Employee Not Found');
+    end if;
+  
+    if v_tax=-1 then
+        dbms_output.put_line('Employee Not Found');
+    else
+        dbms_output.put_line('Tax Amount : '||v_tax);
+    end if;
+    
+    
+end;

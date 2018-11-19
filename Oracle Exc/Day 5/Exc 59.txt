@@ -1,0 +1,26 @@
+
+set serveroutput on
+declare
+    TYPE type_emp_detail IS record
+  (
+    employee_id NUMBER(6),
+    salary      NUMBER(8,2),
+    joining_date Date
+  );
+  
+  cursor c1 is select employee_id,salary,hire_date from employees where department_id=50;
+  v_emp_rec type_emp_detail;
+begin
+    open c1;
+       loop
+            fetch c1 into v_emp_rec;
+            exit when c1%notfound;
+            dbms_output.put_line('Employee id : '||v_emp_rec.Employee_id);
+            dbms_output.put_line('Salary : '||v_emp_rec.salary);
+            dbms_output.put_line('Joining Date : '||v_emp_rec.joining_date);
+            dbms_output.put_line('---------------------------------------------------');
+        end loop;
+    close c1;
+    
+    
+end;

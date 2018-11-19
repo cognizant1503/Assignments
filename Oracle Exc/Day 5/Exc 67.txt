@@ -1,0 +1,180 @@
+set serveroutput on
+
+---------------------Package Specifications------------------------------
+
+CREATE or replace package pkg_job_details
+is
+    type type_job_details is record
+    (
+      job_title jobs.job_title%type,
+      min_salary jobs.min_salary%type,
+      max_salary jobs.max_salary%type
+    );
+    
+    v_rec_job_details type_job_details;
+    -------Procedure to add New JOB------------ 
+
+    PROCEDURE add_job(
+      p_job_id    IN jobs.job_id%TYPE,
+      p_job_title IN jobs.job_title%TYPE,
+      p_min_salary jobs.min_salary%TYPE,
+      p_max_salary jobs.max_salary%TYPE,
+      p_status OUT NUMBER);
+    
+    -------Function to get Job Title---------------- 
+
+    FUNCTION get_job_title(p_job_id IN jobs.job_id%TYPE)
+    RETURN jobs.job_title%TYPE;
+    
+    -------Function to get Job Details--------------
+
+    FUNCTION get_job_details(
+      p_job_id jobs.job_id%TYPE)
+    RETURN type_job_details;
+    
+    ------Function to get Minimum Salary---------------
+
+    FUNCTION get_min_salary(
+      p_job_id IN jobs.job_id%TYPE)
+    RETURN jobs.min_salary%TYPE;
+    
+    -------Function to get Maximum Salary---------------
+
+    FUNCTION get_max_salary(
+      p_job_id IN jobs.job_id%TYPE)
+    RETURN jobs.max_salary%TYPE;
+    
+end pkg_job_details;
+
+---------------------Package Body---------------------------------
+
+create or replace package body pkg_job_details
+is
+    ---------Function to check job validation---------------------
+
+    FUNCTION is_job_valid(p_job_id IN jobs.job_id%TYPE)
+      RETURN BOOLEAN
+    is
+        v_count pls_integer;
+    begin
+        select count(job_id) into v_count from jobs where job_id=p_job_id;
+        if(v_count=1) then
+            return true;
+        else
+            return false;
+        end if;
+    end;
+    -------Function to get Job Details--------------
+
+     function get_job_details(p_job_id jobs.job_id%TYPE)
+      RETURN type_job_details
+    is
+      v_rec type_job_details;
+    begin
+        if(is_job_valid(p_job_id) = true) then
+              select job_title,min_salary,max_salary into v_rec from jobs where job_id=p_job_id;
+              return v_rec;
+        end if;
+    end;
+    
+     -------Procedure to add New JOB------------ 
+
+    PROCEDURE add_job(
+                      p_job_id    IN jobs.job_id%TYPE,
+                      p_job_title IN jobs.job_title%TYPE,
+                      p_min_salary jobs.min_salary%TYPE,
+                      p_max_salary jobs.max_salary%TYPE,
+                      p_status OUT NUMBER
+                      )
+    is
+    begin
+        if(is_job_valid(p_job_id) =false) then
+            insert into jobs values(p_job_id,p_job_title,p_min_salary,p_max_salary);
+            p_status:=1;
+        else
+            p_status:=0;
+        end if;
+    end;
+    
+    -------Function to get Job Title---------------- 
+
+    function get_job_title(p_job_id IN jobs.job_id%TYPE)
+    RETURN jobs.job_title%TYPE
+    is
+        v_title jobs.job_title%type;
+    begin
+        if(is_job_valid(p_job_id) =true) then
+            select job_title into v_title from jobs where job_id=p_job_id;
+            return v_title;
+        end if;
+    end;
+    
+    ------Function to get Minimum Salary---------------
+
+    FUNCTION get_min_salary(
+      p_job_id IN jobs.job_id%TYPE)
+    RETURN jobs.min_salary%TYPE
+    is 
+        v_min jobs.min_salary%type;
+    begin
+        IF(is_job_valid(p_job_id)) then
+            select min_salary into v_min from jobs where job_id=p_job_id;
+            return v_min;
+        end if; 
+    end;
+    
+    
+    -------Function to get Maximum Salary---------------
+
+    FUNCTION get_max_salary(
+      p_job_id IN jobs.job_id%TYPE)
+    RETURN jobs.max_salary%TYPE
+    is 
+        v_max jobs.max_salary%type;
+    begin
+        IF(is_job_valid(p_job_id)) then
+            select max_salary into v_max from jobs where job_id=p_job_id;
+            return v_max;
+        end if; 
+    end;
+end pkg_job_details;
+
+declare 
+    v_status pls_integer;
+    v_title jobs.job_title%type;
+    v_rec pkg_job_details.type_job_details;
+    v_min jobs.min_salary%type;
+    v_max jobs.max_salary%type;
+begin
+    ------ Get job Title function call------------------
+
+    v_title:=pkg_job_details.get_job_title('MK_REP');
+    dbms_output.put_line('Job Title '||v_title);
+    
+    -------Add job procedure call--------------------
+
+    pkg_job_details.add_job('AB','ABCDEF',10000,100000,v_status);
+      if v_status=1 then
+          dbms_output.put_line('Succesful');
+      else
+          dbms_output.put_line('Not Inserted');
+      end if;
+     
+     -----------Get job details function call----------------
+
+     v_rec:=pkg_job_details.get_job_details('ST_CLERK');
+     dbms_output.put_line('Job Title : '||v_rec.job_title);
+     dbms_output.put_line('Minimum Salary : '||v_rec.min_salary);
+     dbms_output.put_line('Maximum Salary : '||v_rec.max_salary);
+     
+     ------------Minimum Salary Function Call---------------
+
+     v_min:=PKG_JOB_DETAILS.GET_MIN_SALARY('ST_CLERK');
+     dbms_output.put_line('Minimum Salary : '||v_min);
+     
+     ------------Maximum Salary Function Call---------------
+
+     v_max:=PKG_JOB_DETAILS.GET_Max_SALARY('ST_CLERK');
+     dbms_output.put_line('Maximum Salary : '||v_max);
+         
+end;

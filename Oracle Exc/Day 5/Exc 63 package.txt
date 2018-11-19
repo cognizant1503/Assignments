@@ -1,0 +1,42 @@
+create or replace package pkg_dept
+is 
+    type dept_details is record
+    (
+        dept_id number,
+        dept_name varchar2(30),
+        street varchar2(60),
+        city varchar2(30),
+        state_pro varchar2(50)
+    );
+    
+    function sf_dept(dept_id departments.department_id%type) return dept_details;
+    
+end pkg_dept;
+
+create or replace package body pkg_dept 
+is
+    v_rec dept_details;
+    function sf_dept(dept_id departments.department_id%type) return dept_details
+    is
+    begin
+        select department_id,department_name,street_address,city,state_province 
+        into v_rec
+        from departments d,locations l where d.location_id=l.location_id and department_id=dept_id;
+        return v_rec;
+    end;
+end pkg_dept;
+
+
+declare
+    v_rec pkg_dept.dept_details;
+begin
+    v_rec:=pkg_dept.sf_dept(50);
+    dbms_output.put_line('Department ID : '||v_rec.dept_id);
+    dbms_output.put_line('Department Name : '||v_rec.dept_name);
+    dbms_output.put_line('Street Address+ : '||v_rec.street);
+    dbms_output.put_line('City : '||v_rec.city);
+    dbms_output.put_line('State Province : '||v_rec.state_pro);
+    dbms_output.put_line('-----------------------------------------------------------');
+end;
+
+

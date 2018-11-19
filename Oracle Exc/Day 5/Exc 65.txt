@@ -1,0 +1,93 @@
+--------------------------------Package Specifications------------------------------
+create or replace package pkg_job_details
+is
+    -----------Procedure to add New JOB--------------
+
+    PROCEDURE add_job(
+      p_job_id    IN jobs.job_id%TYPE,
+      p_job_title IN jobs.job_title%TYPE,
+      p_min_salary jobs.min_salary%TYPE,
+      p_max_salary jobs.max_salary%TYPE,
+      p_status OUT NUMBER);
+    
+   ---------Function to get Job Title----------------  
+    FUNCTION get_job_title(p_job_id IN jobs.job_id%TYPE)
+    RETURN jobs.job_title%TYPE;
+
+
+end pkg_job_details;
+
+--------------------------------Package Body---------------------------------
+
+create or replace package body pkg_job_details
+is
+---------Function to check job validation---------------------
+
+    FUNCTION is_job_valid(p_job_id IN jobs.job_id%TYPE)
+      RETURN BOOLEAN
+    is
+        v_count pls_integer;
+    begin
+        select count(job_id) into v_count from jobs where job_id=p_job_id;
+        if(v_count=1) then
+            return true;
+        else
+            return false;
+        end if;
+    end;
+    
+---------Procedure to add New JOB------------ 
+
+    PROCEDURE add_job(
+                      p_job_id    IN jobs.job_id%TYPE,
+                      p_job_title IN jobs.job_title%TYPE,
+                      p_min_salary jobs.min_salary%TYPE,
+                      p_max_salary jobs.max_salary%TYPE,
+                      p_status OUT NUMBER
+                      )
+    is
+    begin
+        if(is_job_valid(p_job_id) =false) then
+            insert into jobs values(p_job_id,p_job_title,p_min_salary,p_max_salary);
+            p_status:=1;
+        else
+            p_status:=0;
+        end if;
+    end;
+
+-------Function to get Job Title---------------- 
+    
+    function get_job_title(p_job_id IN jobs.job_id%TYPE)
+    RETURN jobs.job_title%TYPE
+    is
+        v_title jobs.job_title%type;
+    begin
+        if(is_job_valid(p_job_id) =true) then
+            select job_title into v_title from jobs where job_id=p_job_id;
+            return v_title;
+        end if;
+    end;
+    
+end pkg_job_details;
+
+declare 
+    v_status pls_integer;
+    v_title jobs.job_title%type;
+begin
+-------Get job Title function call------------------
+
+    v_title:=pkg_job_details.get_job_title('MK_REP');
+    dbms_output.put_line('Job Title '||v_title);
+
+-------Add job procedure call--------------------
+
+    pkg_job_details.add_job('AB','ABCDEF',10000,100000,v_status);
+      if v_status=1 then
+          dbms_output.put_line('Succesful');
+      else
+          dbms_output.put_line('Not Inserted');
+      end if;
+      
+      
+end;
+

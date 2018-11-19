@@ -1,0 +1,48 @@
+create or replace package pkg_employee_info1
+is
+    type empinfo is record
+    (
+        first_name varchar2(30),
+        last_name varchar2(30)
+    );
+    
+    function get_employee_info(empid number) return varchar2;
+    function get_employee_info(email_id varchar2) return varchar2;
+end pkg_employee_info1;
+
+
+create or replace package body pkg_employee_info1
+is
+    emp_name empinfo;
+    function get_employee_info(empid number) return varchar2
+    is
+       v_name varchar2(50);
+       
+    begin
+        select first_name,last_name into emp_name from employees where employee_id=empid;
+        v_name:= emp_name.first_name||'  '||emp_name.last_name;
+        return v_name;
+    end;
+    
+    function get_employee_info(email_id varchar2) return varchar2
+    is
+       v_name1 varchar2(50);
+       
+    begin
+        select first_name,last_name into emp_name from employees where email=email_id;
+        v_name1:= emp_name.first_name||'  '||emp_name.last_name;
+        return v_name1;
+    end;
+    
+end PKG_EMPLOYEE_INFO1;
+
+
+declare
+    v_name1 varchar2(50);
+    v_name2 varchar2(50);
+begin
+    v_name1:=PKG_EMPLOYEE_INFO1.get_employee_info('AHUNOLD');
+    dbms_output.put_line(v_name1);
+     v_name2:=PKG_EMPLOYEE_INFO1.GET_EMPLOYEE_INFO(100);
+    dbms_output.put_line(v_name2);  
+end;
