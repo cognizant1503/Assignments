@@ -1,0 +1,454 @@
+----------------------------Exercise 86, Requirement 72----------------------------
+
+set serveroutput on
+
+declare
+    cursor c1 is select department_name from departments;
+    type type_dept is varray(9) of departments.department_name%type;
+    
+    dept_details type_dept:=type_dept();
+    v_index pls_integer:=1;
+begin
+    for rec in c1
+    loop
+        dept_details.extend(1);
+        dept_details(v_index):=rec.department_name;
+        v_index:=v_index+1;
+    end loop;
+    
+    for i in 1..dept_details.count
+    loop
+        dbms_output.put_line(i||' '||dept_details(i));
+    end loop;
+end;
+
+=================================================================================================================
+
+----------------------------Exercise 87, Requirement 74----------------------------
+
+set serveroutput on
+
+declare
+  
+    cursor c1 is select * from departments;
+    type type_dept is varray(9) of departments%rowtype;
+    
+    dept_details type_dept:=type_dept();
+    v_index pls_integer:=1;
+begin
+    for rec in c1
+    loop
+        dept_details.extend(1);
+        dept_details(v_index).department_id:=rec.department_id;
+        dept_details(v_index).department_name:=rec.department_name;
+        dept_details(v_index).manager_id:=rec.manager_id;
+        dept_details(v_index).location_id:=rec.location_id;
+        v_index:=v_index+1;
+    end loop;
+    
+    for i in 1..dept_details.count
+    loop
+        dbms_output.put_line('Departmen ID : '||dept_details(i).department_id);
+        dbms_output.put_line('Department Name : '||dept_details(i).department_name);
+        dbms_output.put_line('Manager ID : '||dept_details(i).manager_id);
+        dbms_output.put_line('Location ID : '||dept_details(i).location_id);
+        dbms_output.put_line('-------------------------------------------------------------------');
+    end loop;
+end;
+
+=================================================================================================================
+
+----------------------------Exercise 88, Requirement 75----------------------------
+
+set serveroutput on
+
+declare
+    type emp_details is record
+    (
+        employee_id employees.employee_id%type,
+        first_name employees.first_name%type,
+        last_name employees.last_name%type,
+        department_id employees.department_id%type
+    );
+    
+    type emp_nt is table of emp_details;
+    
+    v_emp_details emp_nt:=emp_nt();
+    v_index pls_integer:=1;
+    
+begin
+    for rec in (select employee_id,first_name,last_name,department_id from employees 
+                      where employee_id in (select manager_id from departments))
+    loop
+        v_emp_details.extend(1);
+        v_emp_details(v_index).employee_id:=rec.employee_id;
+        v_emp_details(v_index).first_name:=rec.first_name;
+        v_emp_details(v_index).last_name:=rec.last_name;
+        v_emp_details(v_index).department_id:=rec.department_id;
+        v_index:=v_index+1;
+    end loop;
+    
+    for i in 1..v_emp_details.count
+    loop
+        dbms_output.put_line('Employee ID : '||v_emp_details(i).employee_id);
+        dbms_output.put_line('First Name : '||v_emp_details(i).first_name);
+        dbms_output.put_line('Last Name : '||v_emp_details(i).last_name);
+        dbms_output.put_line('Department ID : '||v_emp_details(i).department_id);
+        dbms_output.put_line('---------------------------------------------------------');
+    end loop;
+end;
+
+=================================================================================================================
+
+----------------------------Exercise 89, Requirement 75----------------------------
+
+set serveroutput on
+
+declare
+  
+    type emp_nt is table of employees%rowtype;
+    
+    v_emp_details emp_nt:=emp_nt();
+    v_index pls_integer:=1;
+    
+begin
+    for rec in (select * from employees 
+                      where employee_id in (select manager_id from departments))
+    loop
+        v_emp_details.extend(1);
+        v_emp_details(v_index).employee_id:=rec.employee_id;
+        v_emp_details(v_index).first_name:=rec.first_name;
+        v_emp_details(v_index).last_name:=rec.last_name;
+        v_emp_details(v_index).email:=rec.email;
+        v_emp_details(v_index).PHONE_NUMBER:=rec.PHONE_NUMBER;
+        v_emp_details(v_index).HIRE_DATE:=rec.HIRE_DATE;
+        v_emp_details(v_index).JOB_ID:=rec.JOB_ID;
+        v_emp_details(v_index).SALARY:=rec.SALARY;
+        v_emp_details(v_index).COMMISSION_PCT:=rec.COMMISSION_PCT;
+        v_emp_details(v_index).manager_id:=rec.manager_id;
+        v_emp_details(v_index).department_id:=rec.department_id;
+        v_index:=v_index+1;
+    end loop;
+    
+    for i in 1..v_emp_details.count
+    loop
+        dbms_output.put_line('Employee ID : '||v_emp_details(i).employee_id);
+        dbms_output.put_line('First Name : '||v_emp_details(i).first_name);
+        dbms_output.put_line('Last Name : '||v_emp_details(i).last_name);
+        dbms_output.put_line('Email : '||v_emp_details(i).email);
+        dbms_output.put_line('PHONE_NUMBER : '||v_emp_details(i).PHONE_NUMBER);
+        dbms_output.put_line('HIRE_DATE : '||v_emp_details(i).HIRE_DATE);
+        dbms_output.put_line('JOB_ID : '||v_emp_details(i).JOB_ID);
+        dbms_output.put_line('SALARY : '||v_emp_details(i).SALARY);
+        dbms_output.put_line('COMMISSION_PCT : '||v_emp_details(i).COMMISSION_PCT);
+        dbms_output.put_line('manager ID : '||v_emp_details(i).manager_id);
+        dbms_output.put_line('Department ID : '||v_emp_details(i).department_id);
+        dbms_output.put_line('---------------------------------------------------------');
+    end loop;
+end;
+
+=================================================================================================================
+
+----------------------------Exercise 90, Requirement 76----------------------------
+
+set serveroutput on
+
+declare
+  
+    type emp_nt is table of employees%rowtype;
+    
+    v_emp_details emp_nt:=emp_nt();
+    v_index pls_integer:=1;
+    
+begin
+    for rec in (select * from employees e where round((sysdate-hire_date)/365)= 
+          (select max(round((sysdate-hire_date)/365)) from employees e1 where e.department_id=e1.department_id group by e1.department_id))
+    loop
+        v_emp_details.extend(1);
+        v_emp_details(v_index).employee_id:=rec.employee_id;
+        v_emp_details(v_index).first_name:=rec.first_name;
+        v_emp_details(v_index).last_name:=rec.last_name;
+        v_emp_details(v_index).email:=rec.email;
+        v_emp_details(v_index).PHONE_NUMBER:=rec.PHONE_NUMBER;
+        v_emp_details(v_index).HIRE_DATE:=rec.HIRE_DATE;
+        v_emp_details(v_index).JOB_ID:=rec.JOB_ID;
+        v_emp_details(v_index).SALARY:=rec.SALARY;
+        v_emp_details(v_index).COMMISSION_PCT:=rec.COMMISSION_PCT;
+        v_emp_details(v_index).manager_id:=rec.manager_id;
+        v_emp_details(v_index).department_id:=rec.department_id;
+        v_index:=v_index+1;
+    end loop;
+    
+    for i in 1..v_emp_details.count
+    loop
+        dbms_output.put_line('Employee ID : '||v_emp_details(i).employee_id);
+        dbms_output.put_line('First Name : '||v_emp_details(i).first_name);
+        dbms_output.put_line('Last Name : '||v_emp_details(i).last_name);
+        dbms_output.put_line('Email : '||v_emp_details(i).email);
+        dbms_output.put_line('PHONE_NUMBER : '||v_emp_details(i).PHONE_NUMBER);
+        dbms_output.put_line('HIRE_DATE : '||v_emp_details(i).HIRE_DATE);
+        dbms_output.put_line('JOB_ID : '||v_emp_details(i).JOB_ID);
+        dbms_output.put_line('SALARY : '||v_emp_details(i).SALARY);
+        dbms_output.put_line('COMMISSION_PCT : '||v_emp_details(i).COMMISSION_PCT);
+        dbms_output.put_line('manager ID : '||v_emp_details(i).manager_id);
+        dbms_output.put_line('Department ID : '||v_emp_details(i).department_id);
+        dbms_output.put_line('---------------------------------------------------------');
+    end loop;
+end;
+
+=================================================================================================================
+
+----------------------------Exercise 91, Requirement 77----------------------------
+
+set serveroutput on
+
+declare
+  
+    type emp_nt is table of employees.FIRST_NAME%TYPE index by departments.department_name%type;
+    
+    v_emp_details emp_nt;
+    v_key departments.department_name%type;
+begin
+    for rec in (select first_name,department_name from employees e,departments d where e.department_id=d.department_id and 
+                  round((sysdate-hire_date)/365)= 
+                  (select max(round((sysdate-hire_date)/365)) from employees e1 
+                        where e.department_id=e1.department_id group by e1.department_id))
+    loop
+        v_emp_details(rec.department_name):=rec.first_name;
+    end loop;
+    
+    v_key:=v_emp_details.first;
+    while v_key is not null
+    loop
+        dbms_output.put_line(v_key||' '||v_emp_details(v_key));
+        v_key:=v_emp_details.next(v_key);
+    end loop;
+    
+end;
+
+=================================================================================================================
+
+----------------------------Exercise 92, Requirement 78----------------------------
+
+set serveroutput on
+
+create or replace package pkg_dept_details
+is
+    type type_dept_rec is record
+    (
+        department_name departments.department_name%type,
+        manager_name varchar2(50),
+        no_of_employees pls_integer,
+        avg_salary number,
+        sum_salary number,
+        country_name countries.country_name%type
+    );
+    
+    type dept_details is table of type_dept_rec;
+    
+    v_dept_details dept_details:=dept_details();
+end;
+
+create or replace function sf_dept_details
+    return pkg_dept_details.dept_details
+is
+    v_fname varchar2(30);
+    v_lname varchar2(30); 
+    v_emp_count pls_integer;
+    v_sum number;
+    v_avg number;
+    v_name varchar2(50);
+    v_country_name countries.country_name%type;
+    
+    v_index pls_integer:=1;
+    
+begin
+    pkg_dept_details.v_dept_details.delete;
+    for rec in (select * from departments)
+    loop
+        select first_name,last_name into v_fname,v_lname from employees where employee_id=rec.manager_id;
+            v_name:=v_fname||' '||v_lname;
+        select count(employee_id),sum(salary),round(avg(salary))
+            into v_emp_count,v_sum,v_avg
+                from employees where department_id=rec.department_id;
+        select country_name into v_country_name from countries c,locations l
+              where c.country_id=l.country_id and l.location_id=rec.location_id;
+        
+       pkg_dept_details.v_dept_details.extend(1);
+       
+       pkg_dept_details.v_dept_details(v_index).department_name:=rec.department_name;
+       pkg_dept_details.v_dept_details(v_index).manager_name:=v_name;
+       pkg_dept_details.v_dept_details(v_index).no_of_employees:=v_emp_count;
+       pkg_dept_details.v_dept_details(v_index).avg_salary:=v_avg;
+       pkg_dept_details.v_dept_details(v_index).sum_salary:=v_sum;
+       pkg_dept_details.v_dept_details(v_index).country_name:=v_country_name;
+       
+       v_index:=v_index+1;
+       
+    end loop;
+    return pkg_dept_details.v_dept_details;
+end;
+
+set serveroutput on
+declare
+    v_dept_details pkg_dept_details.dept_details;
+begin
+    v_dept_details:=sf_dept_details();
+    
+    for i in 1..v_dept_details.count
+    loop
+        dbms_output.put_line('Department Name : '||v_dept_details(i).department_name);
+        dbms_output.put_line('Manager Name : '||v_dept_details(i).manager_name);
+        dbms_output.put_line('No of employees : '||v_dept_details(i).no_of_employees);
+        dbms_output.put_line('Average Salary : '||v_dept_details(i).avg_salary);
+        dbms_output.put_line('Sum of Salary : '||v_dept_details(i).sum_salary);
+        dbms_output.put_line('Country name : '||v_dept_details(i).country_name);
+        dbms_output.put_line('-------------------------------------------------------');
+    end loop;
+end;
+
+=================================================================================================================
+
+----------------------------Exercise 93, Requirement 56----------------------------
+
+set serveroutput on
+
+create or replace package pkg_emp_details
+is
+      type emp_rec is record
+      (
+          employee_id employees.employee_id%type,
+          job_title jobs.job_title%type,
+          department_id departments.department_id%type,
+          salary employees.salary%type
+      );
+      
+      type emp_details is table of emp_rec;
+      
+      v_emp_details emp_details:=emp_details();
+end;
+
+create or replace function sf_emp_details(dept_id departments.department_id%type)
+  return pkg_emp_details.emp_details
+is
+   v_job_title jobs.job_title%type;
+   v_index pls_integer:=1;
+begin
+    pkg_emp_details.v_emp_details.delete;
+    for rec in (select employee_id,job_id,department_id,salary from employees where department_id=dept_id)
+    loop
+        select job_title into v_job_title from jobs where job_id=rec.job_id;
+        
+        pkg_emp_details.v_emp_details.extend(1);
+        
+        pkg_emp_details.v_emp_details(v_index).employee_id:=rec.employee_id;
+        pkg_emp_details.v_emp_details(v_index).job_title:=v_job_title;
+        pkg_emp_details.v_emp_details(v_index).department_id:=rec.department_id;
+        pkg_emp_details.v_emp_details(v_index).salary:=rec.salary;
+        
+        v_index:=v_index+1;
+    end loop;
+    return pkg_emp_details.v_emp_details;
+end;
+
+declare
+    v_emp_details pkg_emp_details.emp_details;
+begin
+    v_emp_details:=sf_emp_details(10);
+    for i in 1..v_emp_details.count
+    loop
+        dbms_output.put_line('Employee Id : '||v_emp_details(i).employee_id);
+        dbms_output.put_line('Job Title : '||v_emp_details(i).job_title);
+        dbms_output.put_line('Department Id : '||v_emp_details(i).department_id);
+        dbms_output.put_line('Salary : '||v_emp_details(i).salary);
+        dbms_output.put_line('---------------------------------------------------------');
+    end loop;
+end;
+
+=================================================================================================================
+
+----------------------------Exercise 94, Requirement 79----------------------------
+
+set serveroutput on
+
+DROP TABLE BONUS_PARAMS;
+CREATE TABLE BONUS_PARAMS
+(
+   from_sal       NUMBER (10, 2),
+   to_sal         NUMBER (10, 2),
+   bonus_months   NUMBER (2)
+);
+
+INSERT INTO BONUS_PARAMS VALUES (0, 2000, 9);
+INSERT INTO BONUS_PARAMS VALUES (2001, 10000, 7);
+INSERT INTO BONUS_PARAMS VALUES (10001, 20000, 6);
+INSERT INTO BONUS_PARAMS VALUES (20001, 2000000, 4);
+COMMIT;
+
+create or replace package pkg_bonus_rules
+is
+    type bonus_rules is table of bonus_params%rowtype;
+    
+    v_bonus bonus_rules:=bonus_rules();
+    
+    function sf_get_bonus_rules return bonus_rules;
+    procedure sp_cal_bonus(empid employees.employee_id%type,bonus out employees.salary%type);
+end;
+
+create or replace package body pkg_bonus_rules
+is
+    function sf_get_bonus_rules return bonus_rules
+    is
+        V_INDEX PLS_INTEGER:=1;
+    begin
+        for rec in (select *from bonus_params)
+        loop
+            v_bonus.extend(1);
+            
+            v_bonus(v_index).from_sal:=rec.from_sal;
+            v_bonus(v_index).to_sal:=rec.to_sal;
+            v_bonus(v_index).bonus_months:=rec.bonus_months;
+            
+            v_index:=v_index+1;
+        end loop;
+        return v_bonus;
+    end;
+    
+    procedure sp_cal_bonus(empid employees.employee_id%type,bonus out employees.salary%type)
+    is
+        v_bonus_rules bonus_rules;
+        v_cur_sal employees.salary%type;
+        v_months pls_integer;
+    begin
+        v_bonus_rules:=sf_get_bonus_rules();
+        
+        select salary into v_cur_sal from employees where employee_id=empid;
+        for i in 1..v_bonus_rules.count
+        loop
+            if(v_cur_sal > v_bonus_rules(i).from_sal) and v_cur_sal<v_bonus_rules(i).to_sal then
+                 v_months:=v_bonus_rules(i).bonus_months;
+                  bonus:=v_cur_sal*v_months;
+                 return;
+            end if;
+        end loop;
+    end;
+end;
+
+set serveroutput on
+declare
+    cursor c1 is select employee_id,salary from employees;
+    v_bonus employees.salary%type;
+begin
+    -----------For all EMployees in a table-----------------------
+    /*for rec in c1
+    loop
+        pkg_bonus_rules.sp_cal_bonus(rec.employee_id,v_bonus);
+        dbms_output.put_line('Employee ID : '||rec.employee_id);
+        dbms_output.put_line('Current Salary : '||rec.salary);
+        dbms_output.put_line('Bonus Amount : '||v_bonus);
+        dbms_output.put_line('-----------------------------------------------------');
+    end loop;*/
+    -------------For a particular employee--------------------
+    pkg_bonus_rules.sp_cal_bonus(100,v_bonus);
+    dbms_output.put_line('Bonus Amount : '||v_bonus);
+end;

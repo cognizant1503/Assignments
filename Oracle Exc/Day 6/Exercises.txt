@@ -1,0 +1,88 @@
+-----------------------Excercise 83,Requiremnt 70-----------------------------------
+set serveroutput on
+
+declare
+    cursor c1 is select first_name,last_name from employees where employee_id in(select manager_id from departments);
+    type v_manager_name is table of varchar2(50);
+    
+    v_mname v_manager_name:=v_manager_name();
+    v_index pls_integer:=1;
+    
+    v_name varchar2(50);
+begin
+    for rec in c1
+    loop
+        v_mname.extend(1);
+        v_mname(v_index):=rec.first_name||' '||rec.last_name;
+        v_index :=v_index+1;
+    end loop;
+    
+    for i in 1..v_mname.count
+    loop
+        dbms_output.put_line(i||' '||v_mname(i));
+    end loop;
+end;
+
+===========================================================================================================
+
+
+--------------------------Exercise 84,Requirement 72------------------------------
+set serveroutput on
+declare
+    type type_dept is table of varchar2(50) index by pls_integer;
+    cursor c1 is (select department_id,department_name from departments);
+    
+    dept_details type_dept;
+    v_key pls_integer;
+begin
+    for rec in c1
+    loop
+        dept_details(rec.department_id):=rec.department_name;
+    end loop;
+    
+    v_key:=dept_details.first;
+    while v_key is not null
+    loop
+        dbms_output.put_line(v_key||' '||dept_details(v_key));
+        v_key:=dept_details.next(v_key);
+    end loop;
+end;
+===========================================================================================================
+
+--------------------------------Exercise 85,Requirement 48----------------------------------
+create or replace package pkg_emp_details
+is 
+    type type_emp is table of number;
+    
+    col_emp_details type_emp:=type_emp();
+end pkg_emp_details;
+
+create or replace function sf_get_reportees(mid employees.employee_id%type)
+  return pkg_emp_details.type_emp
+is
+    cursor c1 is select employee_id from employees where manager_id=mid;
+    v_index pls_integer:=1;
+    
+begin
+    for rec in c1
+    loop
+        pkg_emp_details.col_emp_details.extend(1);
+        pkg_emp_details.col_emp_details(v_index):=rec.employee_id;
+        v_index:=v_index+1;
+    end loop;
+    return pkg_emp_details.col_emp_details;
+end;
+
+set serveroutput on
+declare 
+    v_emp pkg_emp_details.type_emp;
+begin
+    v_emp:=sf_get_reportees(100);
+    for i in 1..v_emp.count
+    loop
+          dbms_output.put_line(i||' '||v_emp(i));
+    end loop;
+end;
+
+
+

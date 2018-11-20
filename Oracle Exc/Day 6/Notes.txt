@@ -1,0 +1,210 @@
+---------------------------VARRAY------------------------------
+declare
+    cursor c1 is select department_name from departments;
+    type dept_arr is varray(9) of varchar2(30);
+    
+    index_position pls_integer:=1;
+    v_dept_arr dept_arr:=dept_arr();
+begin
+    for dept_name in c1
+    loop
+        v_dept_arr.extend(1);
+        v_dept_arr(index_position):=dept_name.department_name;
+        index_position:=index_position+1;
+    end loop;
+    
+    for rec in 1..v_dept_arr.count
+    loop
+        dbms_output.put_line(rec||' '||v_dept_arr(rec));
+    end loop;
+end;
+
+
+---------------------------------Requirement 69-----------------------------------------
+
+set serveroutput on
+
+declare
+      type marital_arr is varray(4) of varchar2(25);
+      
+      marital_status_arr marital_arr:=marital_arr();
+begin
+      marital_status_arr.extend(4);
+      marital_status_arr(1):='Married';
+      marital_status_arr(3):='Divorced';
+      marital_status_arr(2):='Single';
+      marital_status_arr(4):='Widowed';
+      
+      for i in 1..marital_status_arr.count
+      loop
+          dbms_output.put_line(i||' '||marital_status_arr(i));
+      end loop;
+end;
+
+---------------------------------------------------------------------------------------------
+declare
+      type marital_arr is varray(4) of varchar2(25);
+      
+      marital_status_arr marital_arr:=marital_arr('Married','Single','Widowed','Divorced');
+begin
+      for i in 1..marital_status_arr.count
+      loop
+          dbms_output.put_line(i||' '||marital_status_arr(i));
+      end loop;
+end;
+
+===============================================================================================================
+
+--------------------------Nested Table---------------------------
+
+declare 
+    cursor c1 is select region_name from regions;
+    type reg_nt is table of varchar2(30);
+    
+    v_reg_nt reg_nt:=reg_nt();
+    v_index pls_integer:=1;
+begin
+    for reg_name in c1
+    loop
+        v_reg_nt.extend(1);
+        v_reg_nt(v_index):=reg_name.region_name;
+        v_index:=v_index+1;
+    end loop;
+    
+    for rec in 1..v_reg_nt.count
+    loop
+        dbms_output.put_line(rec||' '||v_reg_nt(rec));
+    end loop;
+end;
+
+--------------------------------------Requirement 48--------------------------------------------------------
+set serveroutput on
+declare
+      cursor emp_details(v_mid employees.manager_id%type) is
+          select employee_id from employees where manager_id=v_mid;
+      
+      type emp_det is table of number;
+      
+      empid emp_det:=emp_det();
+      v_index pls_integer:=1;
+begin
+      for emp_id in emp_details(100)
+      loop
+          empid.extend(1);
+          empid(v_index):=emp_id.employee_id;
+          v_index:=v_index+1;
+      end loop;
+      
+      for i in 1..empid.count
+      loop
+          dbms_output.put_line(i ||' '||empid(i));
+      end loop;
+end;
+
+====================================================================================================================
+
+---------------------------------Requirement 68---------------------------------------
+
+set serveroutput on
+
+declare
+    type reg is record
+    (
+        reg_id regions.region_id%type,
+        reg_name regions.region_name%type,
+        no_of_countries number(2)
+    );
+    
+    cursor c1 is select * from regions;
+    
+    type reg_details is table of reg;
+    
+    v_reg_det reg_details:=reg_details();
+    v_index pls_integer:=1;
+    v_count pls_integer;
+begin
+
+    for rec in c1
+    loop
+        v_reg_det.extend(1);
+        select count(country_id) into v_count from countries where region_id=rec.region_id;
+        v_reg_det(v_index).reg_id:=rec.region_id;
+        v_reg_det(v_index).reg_name:=rec.region_name;
+        v_reg_det(v_index).no_of_countries:=v_count;
+        
+        v_index:=v_index+1;
+    end loop;
+    
+    for i in 1..v_reg_det.count
+    loop
+        DBMS_OUTPUT.PUT_LINE('Region Id : '||v_reg_det(i).reg_id);
+        DBMS_OUTPUT.PUT_LINE('Region Name : '||v_reg_det(i).reg_name);
+        DBMS_OUTPUT.PUT_LINE('number of Countries : '||v_reg_det(i).no_of_countries);
+        DBMS_OUTPUT.PUT_LINE('----------------------------------------------');
+    end loop;
+
+end;
+
+=========================================================================================================
+
+-------------------------------Requirement 71-------------------------------------
+set serveroutput on
+declare
+    type type_dept is record
+    (
+      dept_name departments.department_name%type,
+      max_salary employees.salary%type
+    );
+    
+    cursor c1 is (select d.department_name,max(salary) max_salary from employees e,departments d 
+                  where e.department_id=d.department_id  group by d.department_name);
+    
+    type dept_details is table of type_dept;
+    
+    v_dept_details dept_details:=dept_details();
+    v_index pls_integer:=1; 
+begin
+    for rec in c1
+    loop
+        v_dept_details.extend(1);
+        
+        v_dept_details(v_index).dept_name:=rec.department_name;
+        v_dept_details(v_index).max_salary:=rec.max_salary;
+        
+        v_index:=v_index+1;
+    end loop;
+    
+    for i in 1..v_dept_details.count
+    loop
+        dbms_output.put_line('Department Name : '||v_dept_details(i).dept_name);
+        dbms_output.put_line('Maximum Salary : '||v_dept_details(i).max_salary);
+        dbms_output.put_line('------------------------------------------------------');
+    end loop;
+end;
+
+-------------------------------Requirement 71 using Associative Arrays-------------------------------------
+set serveroutput on
+declare
+    cursor c1 is (select d.department_name,max(salary) max_salary from employees e,departments d 
+                  where e.department_id=d.department_id  group by d.department_name);
+    
+    type dept_details is table of number index by departments.department_name%type;
+    
+    v_dept_details dept_details;
+    v_key departments.department_name%type;
+begin
+    for rec in c1
+    loop
+          v_dept_details(rec.department_name):=rec.max_salary;
+    end loop;
+    
+    v_key:=v_dept_details.first;
+    
+    while (v_key is not null)
+    loop
+          dbms_output.put_line(v_key ||' : '||v_dept_details(v_key));
+          v_key:=v_dept_details.next(v_key);
+    end loop;
+end;
+=============================================================================================================
+
