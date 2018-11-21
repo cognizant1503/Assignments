@@ -1,0 +1,90 @@
+----------------------------Exercise 95,Requirment 78--------------------------------
+
+set serveroutput on
+
+create or replace package pkg_emp_details
+is
+    type type_emp_details is table of number(6);
+    col_emp_details type_emp_details:=type_emp_details();
+end;
+
+create or replace function sf_get_reportees(p_mid employees.manager_id%type)
+return pkg_emp_details.type_emp_details
+is
+    v_col_emp_details pkg_emp_details.type_emp_details;
+begin
+    
+    select employee_id bulk collect into v_col_emp_details from employees where manager_id=p_mid;
+    return v_col_emp_details;
+end;
+
+declare
+    v_col_emp_details pkg_emp_details.type_emp_details;
+begin
+    v_col_emp_details:=sf_get_reportees(103);
+    
+    for rec in v_col_emp_details.first..v_col_emp_details.last
+    loop
+        dbms_output.put_line(v_col_emp_details(rec));
+    end loop;
+end;
+
+==================================================================================================================
+
+--------------------------------------Exercise 96,Requiremnt 80------------------------------------------------
+
+set serveroutput on
+create or replace procedure sp_update_salary
+                            ( 
+                                p_col_emp pkg_emp_details.type_emp_details,
+                                p_hike number
+                            )
+is
+begin
+    forall i in p_col_emp.first..p_col_emp.last
+        update employees set salary=salary*(1+p_hike/100) where employee_id=p_col_emp(i);
+    
+end;
+
+declare 
+    v_col_emp pkg_emp_details.type_emp_details;
+begin
+    select employee_id bulk collect into v_col_emp from employees where round((sysdate-hire_date)/365)>=25;
+    sp_update_salary(v_col_emp,10);
+end;
+
+==================================================================================================================
+
+--------------------------------------Exercise 97,Requiremnt 80------------------------------------------------
+
+set serveroutput on
+create or replace procedure sp_update_salary
+                            ( 
+                                p_col_emp pkg_emp_details.type_emp_details,
+                                p_hike number
+                            )
+is
+  v_error_count number(3);
+begin
+    forall i in p_col_emp.first..p_col_emp.last save exceptions
+        update employees set salary=salary*(1+p_hike/100) where employee_id=p_col_emp(i);
+exception
+    when others then
+        v_error_count:=sql%bulk_exceptions.count;
+        dbms_output.put_line('Error Count : '||v_error_count);
+        
+        for i in 1..v_error_count
+        loop
+            dbms_output.put_line('Index : '||sql%bulk_exceptions(i).error_index||' Message : '||sqlerrm(-sql%bulk_exceptions(i).error_code));
+        end loop;
+    
+end;
+
+declare 
+    v_col_emp pkg_emp_details.type_emp_details;
+begin
+    select employee_id bulk collect into v_col_emp from employees where round((sysdate-hire_date)/365)>=25;
+    sp_update_salary(v_col_emp,10);
+end;
+
+

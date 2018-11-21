@@ -1,0 +1,125 @@
+
+-----------------------------Single Column Bulk Processing----------------------------------
+
+set serveroutput on
+DECLARE
+   TYPE type_emp_details IS TABLE OF NUMBER (6);
+   -- A collection to store all employee_ids
+   col_emp_details   type_emp_details;
+   v_manager_id      employees.manager_id%TYPE := 103;
+-- getting reportees of manager 103
+BEGIN
+   --use bulk collect to collect all employee IDs at once in  pl/sql collection from select statement
+   SELECT employee_id  BULK COLLECT INTO col_emp_details FROM EMPLOYEES WHERE MANAGER_ID = v_manager_id;
+   DBMS_OUTPUT.put_line ('Employees reportring to manager:' || v_manager_id);
+   -- displaying all employee IDs reporting to manager 103
+   FOR emp_id IN col_emp_details.FIRST .. col_emp_details.LAST
+   LOOP
+      DBMS_OUTPUT.put_line (col_emp_details (emp_id));
+   END LOOP;
+END;
+
+==============================================================================================================
+
+--------------------------Multiple columns Bulk Processing---------------------------------------------
+
+---------------------Method 1---------------------------------
+DECLARE
+   TYPE type_dept IS RECORD (
+   dept_id number(6),
+   dept_name varchar2(30)
+   );
+   TYPE type_dept_details IS TABLE OF type_dept;
+   col_dept_det    type_dept_details;
+BEGIN
+   SELECT department_id, department_name BULK COLLECT INTO  col_dept_det FROM departments;
+   FOR i IN  col_dept_det.FIRST ..  col_dept_det.LAST
+   LOOP
+      DBMS_OUTPUT.put_line ('Department_id: ' ||  col_dept_det (i).dept_id);
+      DBMS_OUTPUT.put_line ('Department_name: ' || col_dept_det  (i).dept_name);
+   END LOOP;
+END;
+
+
+---------------------Method 2---------------------------------
+
+DECLARE
+   TYPE type_dept_id IS TABLE OF NUMBER (6);
+   TYPE type_dept_name IS TABLE OF VARCHAR2 (30);
+   col_dept_id     type_dept_id;
+   col_dept_name   type_dept_name;
+BEGIN
+   SELECT department_id, department_name BULK COLLECT INTO col_dept_id,col_dept_name
+     FROM departments;
+   FOR i IN col_dept_id.FIRST .. col_dept_id.LAST
+   LOOP
+      DBMS_OUTPUT.put_line ('Department_id: ' || col_dept_id (i));
+   END LOOP;
+      FOR i IN col_dept_name.FIRST .. col_dept_name.LAST
+   LOOP
+      DBMS_OUTPUT.put_line ('Department_name: ' || col_dept_name (i));
+   END LOOP;
+END;
+==============================================================================================================
+
+----------------------------------------------Requirment 80----------------------------------------------------
+
+declare
+    type type_emp_details is table of number(6);
+    
+    col_emp type_emp_details;
+    v_hike number:=10;
+begin
+    select employee_id bulk collect into col_emp from employees where round((sysdate-hire_date)/365)>=25;
+    
+   /* for i in col_emp.first..col_emp.last
+    loop
+        update employees set salary=salary *(1+v_hike/100) where employee_id=col_emp(i);
+    end loop;
+    */
+      forall i in col_emp.first..col_emp.last
+          update employees set salary=salary *(1+v_hike/100) where employee_id=col_emp(i);
+    
+end;
+
+========================================================================================================================
+
+set serveroutput on
+DECLARE
+   TYPE type_emp_details IS TABLE OF NUMBER (6);
+  -- A collection to store all employee_ids
+   col_emp_details    type_emp_details;
+   v_hikepercentage NUMBER (3) := 10;
+   -- givinig 10% hike
+   v_error_count number(3);
+   v_hike NUMBER (3, 2) := 1 + v_hikepercentage / 100;
+  /* salary will be salary(1 + v_hikepercentage/100).
+  instead of calculating for every row use this variable to calculate at once
+  */
+BEGIN
+   
+    SELECT employee_id BULK COLLECT INTO col_emp_details FROM EMPLOYEES
+    WHERE TO_NUMBER (TO_CHAR (SYSDATE, 'yyyy')) - TO_NUMBER ( (TO_CHAR (hire_date, 'yyyy'))) >= 25;
+  
+   FORALL emp_id IN col_emp_details.FIRST .. col_emp_details.LAST SAVE EXCEPTIONS
+      UPDATE employees SET salary = salary * v_hike WHERE employee_id = col_emp_details (emp_id);
+ EXCEPTION
+   WHEN OTHERS THEN
+
+    --SQL%BULK_EXCEPTIONS.COUNT will return the number of execptions occured during execution of DML statement
+
+      v_error_count := SQL%BULK_EXCEPTIONS.COUNT;
+      DBMS_OUTPUT.put_line ('Number Of Exceptions' || v_error_count);
+
+     -- loop to traverse through the collection SQL%BULK_EXCEPTIONS
+
+      FOR i IN 1 .. v_error_count
+      LOOP
+      -- For every exception in the collection SQL%BULK_EXCEPTIONS (i).ERROR_INDEX will give index value
+      -- For every exception in the collection SQLERRM (SQL%BULK_EXCEPTIONS (i).ERROR_CODE) will give error message
+
+         DBMS_OUTPUT.put_line ('Index: '|| SQL%BULK_EXCEPTIONS (i).ERROR_INDEX|| ' Message: '
+            || SQLERRM (-SQL%BULK_EXCEPTIONS (i).ERROR_CODE));
+
+      END LOOP;
+END;

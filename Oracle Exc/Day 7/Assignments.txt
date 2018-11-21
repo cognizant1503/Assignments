@@ -1,0 +1,385 @@
+--------------------------------------Exercise 98,Requiremnt 68------------------------------------------------
+set serveroutput on
+
+declare
+    type type_region is table of regions%rowtype;
+    
+    col_region type_region;
+begin
+    
+    select distinct r.region_id,region_name bulk collect into col_region  
+	from regions r, countries c,locations l,departments d 
+          where r.region_id=c.region_id and
+            c.country_id=l.country_id and
+            l.location_id=d.location_id;
+    
+    for i in col_region.first..col_region.last
+    loop
+        dbms_output.put_line('Region ID : '||col_region(i).region_id||' , Region Name : '||col_region(i).region_name);
+    end loop;
+end;
+
+=======================================================================================================================
+
+--------------------------------------Exercise 99,Requiremnt 81------------------------------------------------
+
+set serveroutput on
+
+declare
+    v_col_emp pkg_emp_details.type_emp_details;
+begin
+    select employee_id bulk collect into v_col_emp from employees where round((sysdate-hire_date)/365)<=1;
+    
+    if v_col_emp.count>0 then
+        for i in v_col_emp.first..v_col_emp.last
+        loop
+              dbms_output.put_line('Employee ID : '||v_col_emp(i));
+        end loop;
+    else
+        dbms_output.put_line('No employee joined in last one year');
+    end if;
+end;
+
+=======================================================================================================================
+
+--------------------------------------Exercise 100,Requiremnt 82------------------------------------------------
+set serveroutput on
+
+create or replace package pkg_dept_details
+is 
+    type type_dept_details is table of departments%rowtype; 
+    v_col_dept type_dept_details;
+end;
+
+create or replace function sf_dept_details(p_lid locations.location_id%type)
+return pkg_dept_details.type_dept_details
+is
+    v_col_dept pkg_dept_details.type_dept_details;
+begin
+     select * bulk collect into v_col_dept from departments where location_id=p_lid;
+     return v_col_dept; 
+end;
+
+set serveroutput on
+declare
+    v_col_dept pkg_dept_details.type_dept_details;
+begin
+    v_col_dept:=sf_dept_details(1700);
+    for i in v_col_dept.first..v_col_dept.last
+    loop
+        dbms_output.put_line('Department ID : '||v_col_dept(i).department_id);
+        dbms_output.put_line('Department Name : '||v_col_dept(i).department_name);
+        dbms_output.put_line('Manager ID : '||v_col_dept(i).manager_id);
+        dbms_output.put_line('Location ID : '||v_col_dept(i).location_id);
+        dbms_output.put_line('------------------------------------------------------------------');
+    end loop;
+end;
+=======================================================================================================================
+
+--------------------------------------Exercise 101,Requiremnt 83------------------------------------------------
+set serveroutput on
+
+create or replace function sf_update_salary(dept_id departments.department_id%type)
+    return pkg_emp_details.type_emp_details
+is
+    v_col_emp pkg_emp_details.type_emp_details;
+begin
+    select employee_id bulk collect into v_col_emp from employees where department_id=dept_id;
+    return v_col_emp;
+end;
+
+declare
+    v_col_emp pkg_emp_details.type_emp_details;
+    v_hike number:=20;
+    v_dept_id departments.department_id%type:=20;
+begin
+    v_col_emp:=sf_update_salary(v_dept_id);
+    
+    forall i in v_col_emp.first..v_col_emp.last save exceptions
+        update employees set salary=salary*(1+v_hike/100) where employee_id=v_col_emp(i);
+    
+end;
+
+=======================================================================================================================
+
+--------------------------------------Exercise 102,Requiremnt 84------------------------------------------------
+set serveroutput on
+
+create or replace function sf_emp_details
+    return pkg_emp_details.type_emp_details
+is
+    v_col_emp pkg_emp_details.type_emp_details;
+begin
+    select employee_id bulk collect into v_col_emp from employees e,departments d where e.employee_id=d.manager_id;
+    return v_col_emp;
+end;
+
+declare
+    v_col_emp pkg_emp_details.type_emp_details;
+    v_hike number:=20;
+    v_dept_id departments.department_id%type:=20;
+begin
+    v_col_emp:=sf_emp_details();
+    
+    for i in v_col_emp.first..v_col_emp.last
+    loop
+        dbms_output.put_line('Employee Id : '||v_col_emp(i));
+    end loop;
+end;
+
+=======================================================================================================================
+
+--------------------------------------Exercise 103,Requiremnt 85------------------------------------------------
+set serveroutput on
+
+create or replace function sf_update_pct
+    return pkg_emp_details.type_emp_details
+is
+    v_col_emp pkg_emp_details.type_emp_details;
+begin
+    select employee_id bulk collect into v_col_emp from employees e,departments d where e.employee_id=d.manager_id;
+    return v_col_emp;
+end;
+
+declare
+    v_col_emp pkg_emp_details.type_emp_details;
+    v_hike number:=20;
+    v_dept_id departments.department_id%type:=20;
+begin
+    v_col_emp:=sf_update_pct();
+    
+    forall i in v_col_emp.first..v_col_emp.last
+        update employees set commission_pct=0.2 where employee_id=v_col_emp(i);
+end; 
+
+=======================================================================================================================
+
+--------------------------------------Exercise 104,Requiremnt 86------------------------------------------------
+set serveroutput on
+
+create or replace procedure sf_updt_salary(p_col_emp pkg_emp_details.type_emp_details,p_hike number)
+is
+begin
+    forall i in p_col_emp.first..p_col_emp.last
+        update employees set salary=salary*(1+p_hike/100) where employee_id=p_col_emp(i);
+end;
+
+
+declare
+    v_col_emp pkg_emp_details.type_emp_details;
+    v_hike number:=25;
+begin
+    v_col_emp:=sf_emp_details();
+    sf_updt_salary(v_col_emp,v_hike);
+end; 
+
+=======================================================================================================================
+
+--------------------------------------Exercise 105,Requiremnt 87------------------------------------------------
+set serveroutput on
+
+create or replace package pkg_promotion
+is
+    type type_promotion is record
+    (
+        employee_id employees.employee_id%type,
+        email employees.email%type,
+        new_job_id employees.job_id%type
+    );
+    type emp_promotion is table of type_promotion;
+    v_emp_promotion emp_promotion:=emp_promotion();
+    
+    function sf_emp_promotion return emp_promotion;
+    procedure sp_update_job_id(p_emp_promotion emp_promotion);
+end;
+
+create or replace package body pkg_promotion
+is
+    function sf_emp_promotion
+            return emp_promotion
+    is
+    begin
+        v_emp_promotion.delete;
+        v_emp_promotion.extend(3);
+        
+        v_emp_promotion(1).employee_id:=110;
+        v_emp_promotion(1).email:='JCHEN';
+        v_emp_promotion(1).new_job_id:='FI_MGR';
+        
+        v_emp_promotion(2).employee_id:=112;
+        v_emp_promotion(2).email:='Jmurman';
+        v_emp_promotion(2).new_job_id:='FI_MGR';
+        
+        v_emp_promotion(3).employee_id:=134;
+        v_emp_promotion(3).email:='Mrogers';
+        v_emp_promotion(3).new_job_id:='PU_MAN';
+        
+        return v_emp_promotion;
+    end;
+    
+      procedure sp_update_job_id(p_emp_promotion emp_promotion)
+      is
+      begin
+          forall i in p_emp_promotion.first..p_emp_promotion.last
+                update employees set job_id=p_emp_promotion(i).new_job_id where employee_id=p_emp_promotion(i).employee_id;
+      end;
+
+end;
+
+declare
+    v_emp_promotion pkg_promotion.emp_promotion;
+begin
+    v_emp_promotion:=pkg_promotion.sf_emp_promotion();
+    
+    PKG_PROMOTION.SP_UPDATE_JOB_ID(v_emp_promotion);
+end;
+
+=======================================================================================================================
+
+--------------------------------------Exercise 106,Requiremnt 87------------------------------------------------
+set serveroutput on
+
+create or replace package pkg_promotion
+is
+    type type_promotion is record
+    (
+        employee_id employees.employee_id%type,
+        email employees.email%type,
+        new_job_id employees.job_id%type
+    );
+    type emp_promotion is table of type_promotion;
+    v_emp_promotion emp_promotion:=emp_promotion();
+    
+    function sf_emp_promotion return emp_promotion;
+    procedure sp_update_job_id(p_emp_promotion emp_promotion);
+end;
+
+create or replace package body pkg_promotion
+is
+    function sf_emp_promotion
+            return emp_promotion
+    is
+    begin
+        v_emp_promotion.delete;
+        v_emp_promotion.extend(3);
+        
+        v_emp_promotion(1).employee_id:=110;
+        v_emp_promotion(1).email:='JCHEN';
+        v_emp_promotion(1).new_job_id:='FI_MGR';
+        
+        v_emp_promotion(2).employee_id:=112;
+        v_emp_promotion(2).email:='Jmurman';
+        v_emp_promotion(2).new_job_id:='FI_MGR';
+        
+        v_emp_promotion(3).employee_id:=134;
+        v_emp_promotion(3).email:='Mrogers';
+        v_emp_promotion(3).new_job_id:='PU_MAN';
+        
+        return v_emp_promotion;
+    end;
+    
+      procedure sp_update_job_id(p_emp_promotion emp_promotion)
+      is
+          v_error_count number(3);  
+      begin
+          forall i in p_emp_promotion.first..p_emp_promotion.last save exceptions
+                update employees set job_id=p_emp_promotion(i).new_job_id where employee_id=p_emp_promotion(i).employee_id;
+      exception
+          WHEN OTHERS then
+              v_error_count:=sql%bulk_exceptions.count;
+              dbms_output.put_line('Error Count : '||v_error_count);
+              
+              for i in 1..v_error_count
+              loop
+                  dbms_output.put_line('Index : '||sql%bulk_exceptions(i).error_index||' , Message : '||
+                      sqlerrm(-sql%bulk_exceptions(i).error_code));
+              end loop;
+      end;
+      
+end;
+
+declare
+    v_emp_promotion pkg_promotion.emp_promotion;
+begin
+    v_emp_promotion:=pkg_promotion.sf_emp_promotion();
+    
+    PKG_PROMOTION.SP_UPDATE_JOB_ID(v_emp_promotion);
+end;
+
+=======================================================================================================================
+
+--------------------------------------Exercise 107,Requiremnt 6------------------------------------------------
+set serveroutput on
+
+create or replace package pkg_add_job
+is
+    type type_add_job is record
+    (
+        job_id varchar2(50),
+        job_title jobs.job_title%type,
+        min_salary jobs.min_salary%type,
+        max_salary jobs.max_salary%type
+    );
+    type add_job is table of type_add_job;
+    v_add_job add_job:=add_job();
+    
+    function sf_add_job return add_job;
+    procedure sp_add_job(p_add_job add_job);
+end;
+
+create or replace package body pkg_add_job
+is
+    function sf_add_job
+            return add_job
+    is
+    begin
+        v_add_job.delete;
+        v_add_job.extend(3);
+        
+        v_add_job(1).job_id:='SL_MAN';
+        v_add_job(1).job_title:='Sales Manager';
+        v_add_job(1).min_salary:=9500;
+        v_add_job(1).max_salary:=20000;
+        
+        v_add_job(2).job_id:='PU_MAN';
+        v_add_job(2).job_title:='Purchasing Assistant Manager';
+        v_add_job(2).min_salary:=7000;
+        v_add_job(2).max_salary:=13000;
+        
+        v_add_job(3).job_id:='SL_ASSISTANT';
+        v_add_job(3).job_title:='Sales Assistant Manager';
+        v_add_job(3).min_salary:=7000;
+        v_add_job(3).max_salary:=13000;
+        
+        return v_add_job;
+    end;
+    
+      procedure sp_add_job(p_add_job add_job)
+      is
+          v_error_count number(3);  
+      begin
+          forall i in p_add_job.first..p_add_job.last save exceptions
+                insert into jobs values(p_add_job(i).job_id,p_add_job(i).job_title,p_add_job(i).min_salary,p_add_job(i).max_salary);
+      exception
+          WHEN OTHERS then
+              v_error_count:=sql%bulk_exceptions.count;
+              dbms_output.put_line('Error Count : '||v_error_count);
+              
+              for i in 1..v_error_count
+              loop
+                  dbms_output.put_line('Index : '||sql%bulk_exceptions(i).error_index||' , Message : '||
+                      sqlerrm(-sql%bulk_exceptions(i).error_code));
+              end loop;
+      end;
+      
+end;
+
+declare
+    v_add_job pkg_add_job.add_job;
+begin
+    v_add_job:=pkg_add_job.sf_add_job();
+    
+    PKG_add_job.SP_add_job(v_add_job);
+end;
+
+
