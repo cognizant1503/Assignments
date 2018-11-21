@@ -1,0 +1,209 @@
+create sequence seq_ReservationId
+start with 7001
+increment by 1;
+
+----------------------Trigger to update seats after booking-------------------------
+create or replace trigger trg_update_seats after insert on reservation
+for each row
+declare
+    v_seats number;
+begin
+    v_seats:=:new.no_of_adults+:new.no_of_children;
+    update vehicle set available_seats=available_seats-v_seats where vehicle_id=:new.vehicle_id;
+end;
+
+--------------------Trigger to update seats after Cancel----------------------
+create or replace trigger trg_update_seats_cancel before update of status on reservation
+for each row
+declare
+    v_seats number;
+begin
+    v_seats:=:new.no_of_adults+:new.no_of_children;
+    update vehicle set available_seats=available_seats+v_seats where vehicle_id=:new.vehicle_id;
+end;
+
+
+-----------------------Package Specification-----------------------
+create or replace package pkg_TravelBooking
+is
+    type vehicle_col is table of vehicle%rowtype;
+    v_vehicle_col vehicle_col:=vehicle_col();
+    
+    procedure booking(
+        p_user_id number,
+        p_vehicle_id varchar2,
+        p_no_of_adults number,
+        p_no_of_children number
+    );
+    
+    procedure CancelBooking(
+          p_reservation_id number,
+          p_user_id number,
+          p_status out pls_integer
+    );
+    
+end;
+
+-----------------------Package Body-----------------------------------
+
+create or replace package body pkg_TravelBooking
+is
+    -----------------------Calculate Fare------------------------------------
+      
+      function calculatefare(p_vehicle_id varchar2,p_no_of_adults pls_integer,p_no_of_children pls_integer)
+          return number
+      is
+          v_total_fare number;
+          v_adult_fare number;
+          v_child_fare number;
+      begin
+          select adult_fare,child_fare into v_adult_fare,v_child_fare from vehicle where vehicle_id=p_vehicle_id;
+          v_total_fare:=p_no_of_adults*v_adult_fare+p_no_of_children*v_child_fare;
+          
+          return v_total_fare;
+      end;
+      
+    ------------------------Booking Procedure---------------------------------
+      procedure booking(
+        p_user_id number,
+        p_vehicle_id varchar2,
+        p_no_of_adults number,
+        p_no_of_children number
+        )
+      is
+        v_seats pls_integer;
+        v_total_fare number;
+        v_reserve_id number;
+        
+        v_no_of_bookings pls_integer;
+      begin
+          select available_seats into v_seats from vehicle where vehicle_id=p_vehicle_id;
+          if(v_seats>=p_no_of_adults+p_no_of_children) then
+              v_total_fare:=calculatefare(p_vehicle_id,p_no_of_adults,p_no_of_children);
+              
+              v_reserve_id:=seq_ReservationId.nextval;
+              insert into reservation values(v_reserve_id,p_user_id,p_vehicle_id,p_no_of_adults,p_no_of_children,'CNF');
+              dbms_output.put_line(seq_ReservationId.currval||' '||v_total_fare);
+              
+              select no_of_bookings into v_no_of_bookings from letsgo_users where user_id=p_user_id;
+              if v_no_of_bookings is null then
+                  update letsgo_users set no_of_bookings=1 where user_id=p_user_id;
+              else
+                  update letsgo_users set no_of_bookings=no_of_bookings+1 where user_id=p_user_id;
+              end if;
+              commit;
+              return;
+          end if;
+      exception
+          when others then
+              dbms_output.put_line('Any other error');
+              return;
+      end;
+      
+     
+      
+      ---------------------Cancel Booking--------------------------------------
+      procedure CancelBooking(
+          p_reservation_id number,
+          p_user_id number,
+          p_status out pls_integer
+          )
+      is
+          v_reservation_count pls_integer;
+          v_user_count pls_integer;
+          v_check number;
+      begin
+          select count(reservation_id) into v_reservation_count from reservation where reservation_id=p_reservation_id;
+          select count(user_id) into v_user_count from letsgo_users where user_id=p_user_id;
+        
+          if v_reservation_count=0 then
+              p_status:=-1;
+              return;
+          else
+              select user_id into v_check from reservation where reservation_id=p_reservation_id;
+              if v_user_count=0 then 
+                  p_status:=-2;
+                  return;
+              else
+                  if v_check<>p_user_id then
+                      p_status:=-3;
+                      return;
+                  else
+                      update reservation set status='CAN' where reservation_id=p_reservation_id;
+                      p_status:=0;
+                      commit;
+                      return;
+                  end if;
+              end if;
+          end if;
+      exception
+          when others then
+              p_status:=-4;
+              return;
+      end;   
+end;
+
+---------------------------Function for Vehicle Details----------------------------
+
+create or replace function sf_RetrieveVehicleDetails(
+                                                      p_from_stn varchar2,
+                                                      p_to_stn varchar2,
+                                                      p_departure_time number
+                                                    )
+return pkg_TravelBooking.vehicle_col
+is
+    vehicle_col pkg_TravelBooking.vehicle_col;
+begin
+    select * bulk collect into vehicle_col from vehicle 
+          where from_stn=p_from_stn and
+                to_stn=p_to_stn and
+                departure_time>=p_departure_time;
+    return vehicle_col;
+end;
+
+-----------------------Anonymous Block--------------------------------
+SET SERVEROUTPUT ON
+declare
+    vehicle_col pkg_TravelBooking.vehicle_col;
+    v_status number;
+begin
+/*
+  -------------Inovking function to retrieve vehicle details--------------------
+    vehicle_col:=sf_RetrieveVehicleDetails('CHENNAI', 'MYSORE', 10);
+    dbms_output.put_line('*****VEHICLE DETAILS*****');
+    dbms_output.put_line('**********************');
+    
+    for i in vehicle_col.first..vehicle_col.last
+    loop
+        dbms_output.put_line('VEHICLE TYPE: '||vehicle_col(i).vehicle_type);
+        dbms_output.put_line('FROM STATION: '||vehicle_col(i).FROM_STN);
+        dbms_output.put_line('TO STATION: '||vehicle_col(i).TO_STN);
+        dbms_output.put_line('DEPARTURE_TIME: '||vehicle_col(i).DEPARTURE_TIME);
+        dbms_output.put_line('ARRIVAL_TIME: '||vehicle_col(i).ARRIVAL_TIME);
+        dbms_output.put_line('ADULT_FARE: '||vehicle_col(i).ADULT_FARE);
+        dbms_output.put_line('CHILD_FARE: '||vehicle_col(i).CHILD_FARE);
+        dbms_output.put_line('AVAILABLE_SEATS: '||vehicle_col(i).AVAILABLE_SEATS);
+        dbms_output.put_line('**********************');
+    end loop;
+    */
+  --------------------Invoking to procedure BOOKING-------------------------
+ /* pkg_TravelBooking.booking(1,'T1001',2,3);
+  pkg_TravelBooking.booking(1,'T1002',1,2);
+  pkg_TravelBooking.booking(2,'T1001',2,3);*/
+  
+  
+  ---------------------Invoking Procedure Cancel Booking--------------
+    pkg_TravelBooking.cancelbooking(7001,3,v_status);
+    if(v_status=0) then
+        dbms_output.put_line('Booking Cancelled');
+    elsif v_status=-1 then
+        dbms_output.put_line('Invalid Reservation Id');
+    elsif v_status=-2 then
+        dbms_output.put_line('Invalid User Id');
+    elsif v_status=-3 then
+        dbms_output.put_line('Reservtion is not made by that user');
+    else
+        dbms_output.put_line('Any other exception');
+    end if;
+end;
+
