@@ -1,0 +1,157 @@
+drop sequence seq_request_id;
+create sequence seq_request_id
+start with 905
+increment by 1;
+
+create or replace package Pkg_transfer_system 
+is
+    procedure apply_transfer(p_employee_id employees.employee_id%type,
+                            p_req_department_id departments.department_id%type
+                            );
+    procedure approve_transfer(p_request_id transfer_req_tbl.request_id%type,
+                              p_status transfer_req_tbl.status%type
+                              );
+end;
+
+-------------------------BODY--------------------------
+create or replace package body Pkg_transfer_system 
+is
+    function employee_count(p_department_id departments.department_id%type) 
+    return boolean
+    is
+        v_count pls_integer;
+    begin
+        select count(employee_id) into v_count from employees where department_id=p_department_id;
+        if v_count<25 then
+            return true;
+        else
+            return false;
+        end if;
+    end;
+
+    -------------------------Apply Transfer--------------------------
+    procedure apply_transfer(p_employee_id employees.employee_id%type,
+                            p_req_department_id departments.department_id%type
+                            )
+    is
+        v_emp_count pls_integer;
+        v_dept_count pls_integer;  
+        v_dept_no departments.department_id%type;
+        
+        v_check boolean;
+        v_mid employees.employee_id%type;
+    begin
+        select count(employee_id) into v_emp_count from employees where employee_id=p_employee_id;
+        select count(department_id) into v_dept_count from departments where department_id=p_req_department_id;
+        
+        if v_emp_count=0 then
+            dbms_output.put_line('Invalid employee id');
+        else
+            if v_dept_count=0 then
+                dbms_output.put_line('Invalid department id');
+            else
+                select department_id into v_dept_no from employees where employee_id=p_employee_id;
+                if p_req_department_id=v_dept_no then
+                      dbms_output.put_line('Cannot apply transfer to same department');
+                else
+                      v_check:=employee_count(p_req_department_id);
+                      if v_check then
+                          select manager_id into v_mid from departments where department_id=p_req_department_id;
+                          insert into transfer_req_tbl values(seq_request_id.nextval,p_employee_id,p_req_department_id,v_mid,sysdate,NULL,'P');
+                          dbms_output.put_line('Applied Successfully'); 
+                      else
+                          dbms_output.put_line('Requested Department has no vacancy'); 
+                      end if;
+                end if;
+            end if;
+        end if;
+    
+        
+    end;
+    
+    ------------------------Approve Transfer---------------------------                       
+    procedure approve_transfer(p_request_id transfer_req_tbl.request_id%type,
+                              p_status transfer_req_tbl.status%type
+                              )
+    is
+    begin
+          update transfer_req_tbl set status=p_status,approved_on=sysdate where request_id=p_request_id;
+          dbms_output.put_line('Updated Succesfully');
+          return;
+    exception
+        when others then
+            dbms_output.put_line('Something Went wrong');
+            dbms_output.put_line('Error Code : '||sqlcode);
+            dbms_output.put_line('Error Message : '||sqlerrm);
+    end;
+end;
+
+-----------------------------Trigger------------------------------------------------
+create or replace trigger trg_update_employees
+after update of status on transfer_req_tbl
+for each row
+declare
+  v_mid employees.employee_id%type;
+begin
+    if :new.status='A' then
+          select manager_id into v_mid from departments where department_id=:new.requested_dept_id;
+          update employees set department_id=:new.requested_dept_id,manager_id=v_mid where employee_id=:new.employee_id; 
+    end if;
+end;
+
+----------------------------Stored Procedure-----------------------------
+
+create or replace procedure sp_employee_eligibility(p_department_id departments.department_id%type,
+                                                    years_of_experience number
+                                                    )
+is
+    type emp_details is table of employees%rowtype;
+    
+    
+    v_emp_details emp_details:=emp_details();
+    v_emp_count pls_integer;
+    v_experience number;
+    v_exp1 number;
+begin
+    select * bulk collect into v_emp_details from employees where department_id=p_department_id;
+    
+    for i in v_emp_details.first..v_emp_details.last
+    loop
+        select count(employee_id) into v_emp_count from job_history where employee_id=v_emp_details(i).employee_id;
+        if(v_emp_count =0) then
+              select round((sysdate-hire_date)/365) into v_experience 
+                      from employees where employee_id=v_emp_details(i).employee_id;
+        else
+               select round((max(end_date)-min(start_date))/365) into v_exp1
+                      from job_history where employee_id=v_emp_details(i).employee_id;
+              select round((sysdate-max(end_date))/365) into v_experience
+                      from job_history where employee_id=v_emp_details(i).employee_id;
+              v_experience:=v_experience+v_exp1;
+        end if;
+        
+        if v_experience>=years_of_experience then
+           
+                dbms_output.put_line('Employee Id : '||v_emp_details(i).employee_id);
+                dbms_output.put_line('First name : '||v_emp_details(i).first_name);
+          end if;    
+    end loop;
+    
+end;
+
+------------Anonymous Block for Stored Procedure----------------
+set serveroutput on
+begin
+    sp_employee_eligibility(60,30);
+end;
+
+--------------Anonymous block for Apply transfer------------------------
+set serveroutput on;
+begin
+    PKG_TRANSFER_SYSTEM.APPLY_TRANSFER(109,100);
+end;
+
+--------------Anonymous block for Approve transfer------------------------
+set serveroutput on;
+begin
+    PKG_TRANSFER_SYSTEM.APProve_TRANSFER(905,'A');
+end;
