@@ -1,0 +1,125 @@
+create or replace package pac_employee
+is
+    procedure hire_employee(
+                              p_empno emp1.empno%type,
+                              p_ename emp1.ename%type,
+                              p_job emp1.job%type,
+                              p_mgr emp1.mgr%type,
+                              p_hiredate emp1.hiredate%type,
+                              p_sal emp1.sal%type,
+                              p_comm emp1.comm%type,
+                              p_deptno emp1.deptno%type
+                            );
+                            
+    procedure upd_employee(p_empno emp1.empno%type);
+                        
+    procedure del_employee(p_empno emp1.empno%type);  
+                          
+    function q_employee(p_empno emp1.empno%type) return number;                       
+end;
+
+create or replace package body pac_employee
+is
+    function valid_deptno(p_deptno emp1.deptno%type) return boolean
+    is
+        v_count pls_integer;
+    begin
+        select count(deptno) into v_count from dept1 where deptno=p_deptno;
+        if v_count=0 then
+            return false;
+        else
+            return true;
+        end if;
+    end;
+    
+    --------------Procedure to Hire employee-------------------
+    procedure hire_employee(
+                              p_empno emp1.empno%type,
+                              p_ename emp1.ename%type,
+                              p_job emp1.job%type,
+                              p_mgr emp1.mgr%type,
+                              p_hiredate emp1.hiredate%type,
+                              p_sal emp1.sal%type,
+                              p_comm emp1.comm%type,
+                              p_deptno emp1.deptno%type
+                            )
+    is
+        v_check boolean;
+    begin
+        v_check:=valid_deptno(p_deptno);
+        if v_check then
+            insert into emp1 values(p_empno,p_ename,p_job,p_mgr,p_hiredate,p_sal,p_comm,p_deptno);
+            dbms_output.put_line('Successful Insertion');
+            return;
+        end if;
+    exception
+        when others then
+            dbms_output.put_line('Something Went wrong');
+            dbms_output.put_line('Error Code : '||sqlcode);
+            dbms_output.put_line('Error Message : '||sqlerrm);
+    end;
+    
+    ------------Procedure to update employee Salary-----------------                      
+    procedure upd_employee(p_empno emp1.empno%type)
+    is
+        v_job emp1.job%type;
+        v_hike number;
+    begin
+        select job into v_job from emp1 where empno=p_empno;
+        if v_job='Manager' then
+            v_hike:=10;
+        elsif v_job='Analyst' then
+            v_hike:=15;
+        else
+            v_hike:=5;
+        end if;
+        update emp1 set sal=sal*(1+v_hike/100) where empno=p_empno;
+        dbms_output.put_line('Successful Update');
+        return;
+    exception
+        when others then
+            dbms_output.put_line('Something Went wrong');
+            dbms_output.put_line('Error Code : '||sqlcode);
+            dbms_output.put_line('Error Message : '||sqlerrm);
+    end;
+    
+    --------------------Procedure to delete employee---------------------                   
+    procedure del_employee(p_empno emp1.empno%type)
+    is
+    begin
+        delete from emp1 where empno=p_empno;
+        dbms_output.put_line('Successful Delete');
+        return;
+    exception
+        when others then
+            dbms_output.put_line('Something Went wrong');
+            dbms_output.put_line('Error Code : '||sqlcode);
+            dbms_output.put_line('Error Message : '||sqlerrm);
+    end;
+    
+    -----------------Function to return Salary + comm----------------------                
+    function q_employee(p_empno emp1.empno%type) return number
+    is
+          v_sal emp1.sal%type;
+          v_comm emp1.comm%type;         
+    begin
+          select sal,comm into v_sal,v_comm from emp1 where empno=p_empno; 
+          return v_sal+v_comm;
+    exception
+        when others then
+            dbms_output.put_line('Something Went wrong');
+            dbms_output.put_line('Error Code : '||sqlcode);
+            dbms_output.put_line('Error Message : '||sqlerrm);
+    end;
+end;
+
+set serveroutput on
+begin
+    --pac_employee.hire_employee(7936,'Vihari','Manager',7698,sysdate,20000,500,10);
+    
+    --pac_employee.upd_employee(7935);
+    
+    --pac_employee.del_employee(7936);
+    
+    dbms_output.put_line(pac_employee.q_employee(7499));
+end;
